@@ -1,0 +1,36 @@
+import { create } from 'zustand';
+
+export interface BleDevice {
+  id: string;
+  name: string | null;
+  rssi: number | null;
+}
+
+interface BleStore {
+  isScanning: boolean;
+  devices: BleDevice[];
+  scanError: string | null;
+  setIsScanning: (scanning: boolean) => void;
+  setScanError: (error: string | null) => void;
+  addOrUpdateDevice: (device: BleDevice) => void;
+  clearDevices: () => void;
+}
+
+export const useBleStore = create<BleStore>((set) => ({
+  isScanning: false,
+  devices: [],
+  scanError: null,
+  setIsScanning: (isScanning) => set({ isScanning }),
+  setScanError: (scanError) => set({ scanError }),
+  addOrUpdateDevice: (newDevice) =>
+    set((state) => {
+      const existingIndex = state.devices.findIndex((d) => d.id === newDevice.id);
+      if (existingIndex !== -1) {
+        const updatedDevices = [...state.devices];
+        updatedDevices[existingIndex] = newDevice;
+        return { devices: updatedDevices };
+      }
+      return { devices: [...state.devices, newDevice] };
+    }),
+  clearDevices: () => set({ devices: [] }),
+}));
