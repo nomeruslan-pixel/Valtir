@@ -1,0 +1,130 @@
+{
+  "name": "BluetoothDevice",
+  "type": "object",
+  "properties": {
+    "device_name": {
+      "type": "string",
+      "description": "Name of the Bluetooth device"
+    },
+    "device_id": {
+      "type": "string",
+      "description": "Unique identifier of the Bluetooth device"
+    },
+    "last_seen": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time the device was detected"
+    },
+    "latitude": {
+      "type": "number",
+      "description": "Latitude of last known location"
+    },
+    "longitude": {
+      "type": "number",
+      "description": "Longitude of last known location"
+    },
+    "address": {
+      "type": "string",
+      "description": "Human readable address of last known location"
+    },
+    "signal_strength": {
+      "type": "number",
+      "description": "RSSI signal strength in dBm"
+    },
+    "battery_level": {
+      "type": "number",
+      "description": "Battery level percentage (0-100)"
+    },
+    "device_type": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "phone",
+        "computer",
+        "headphones",
+        "speaker",
+        "watch",
+        "fitness_tracker",
+        "keyboard",
+        "mouse",
+        "printer",
+        "car",
+        "other"
+      ],
+      "default": "unknown",
+      "description": "Type of Bluetooth device"
+    },
+    "notes": {
+      "type": "string",
+      "description": "User notes about this device"
+    },
+    "is_favorite": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this device is marked as favorite"
+    },
+    "location_history": {
+      "type": "array",
+      "description": "History of locations where device was seen",
+      "items": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "address": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "device_name"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
