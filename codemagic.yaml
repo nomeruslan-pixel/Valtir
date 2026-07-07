@@ -18,16 +18,23 @@ workflows:
         script: |
           cd ios
           pod install
-      - name: Set up code signing
+      - name: Set up keychain
+        script: keychain initialize
+      - name: Fetch signing files
         script: |
-          # Codemagic automatically handles code signing when App Store Connect integration is enabled in the UI.
-          xcode-project use-profiles
-      - name: Build IPA
+          app-store-connect fetch-signing-files "com.valtir.app" \
+            --type IOS_APP_STORE \
+            --create
+      - name: Use system default keychain
+        script: keychain add-certificates
+      - name: Set up code signing settings on Xcode project
+        script: xcode-project use-profiles
+      - name: iOS build
         script: |
           xcode-project build-ipa \
             --workspace "ios/Valtir.xcworkspace" \
             --scheme "Valtir" \
-            --config Release
+            --export-method app-store
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
