@@ -25,8 +25,7 @@ workflows:
         script: |
           xcode-project build-ipa \
             --workspace "ios/Valtir.xcworkspace" \
-            --scheme "Valtir" \
-            --export-method app-store
+            --scheme "Valtir"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
