@@ -8,6 +8,7 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.valtir.app",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Valtir needs location access to map scanned assets.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Valtir needs location access to map scanned assets in background."
@@ -42,6 +43,14 @@
             "central"
           ],
           "bluetoothAlwaysPermission": "Allow Valtir to scan and connect to asset tags."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 24
+          }
         }
       ]
     ]

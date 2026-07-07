@@ -39,3 +39,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+.gradle/
+jdk17/
+*.zip
+*.bat
+i-trak-snap (1)/

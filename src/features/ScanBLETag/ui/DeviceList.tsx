@@ -19,8 +19,14 @@ export const DeviceList = () => {
       renderItem={({ item }) => (
         <View style={styles.card}>
           <View style={styles.info}>
-            <Text style={styles.name}>{item.name || 'Неизвестное устройство'}</Text>
+            <Text style={styles.name}>{item.name || (item.iBeacon ? 'iBeacon Device' : 'Неизвестное устройство')}</Text>
             <Text style={styles.id}>{item.id}</Text>
+            {item.iBeacon && (
+              <View style={styles.iBeaconInfo}>
+                <Text style={styles.iBeaconText}>UUID: {item.iBeacon.uuid}</Text>
+                <Text style={styles.iBeaconText}>Major: {item.iBeacon.major} | Minor: {item.iBeacon.minor}</Text>
+              </View>
+            )}
           </View>
           <View style={styles.rssiContainer}>
             <Text style={styles.rssi}>{item.rssi || 'N/A'}</Text>
@@ -48,5 +54,7 @@ const styles = StyleSheet.create({
   rssiContainer: { alignItems: 'flex-end', justifyContent: 'center', marginLeft: 12 },
   rssi: { fontSize: 18, fontWeight: 'bold', color: '#007AFF' },
   rssiLabel: { fontSize: 10, color: '#888' },
-  emptyText: { textAlign: 'center', color: '#888', marginTop: 32, fontSize: 14 }
+  emptyText: { textAlign: 'center', color: '#888', marginTop: 32, fontSize: 14 },
+  iBeaconInfo: { marginTop: 8, backgroundColor: '#F0F4F8', padding: 8, borderRadius: 6 },
+  iBeaconText: { fontSize: 11, color: '#555', fontFamily: 'monospace' }
 });

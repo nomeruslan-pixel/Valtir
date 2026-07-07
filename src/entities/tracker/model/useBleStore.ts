@@ -4,6 +4,13 @@ export interface BleDevice {
   id: string;
   name: string | null;
   rssi: number | null;
+  rawBase64?: string | null;
+  iBeacon?: {
+    uuid: string;
+    major: number;
+    minor: number;
+    txPower: number;
+  };
 }
 
 interface BleStore {

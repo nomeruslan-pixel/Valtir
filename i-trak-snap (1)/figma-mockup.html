@@ -34,12 +34,12 @@
             scrollbar-width: none;  /* Firefox */
         }
         .tab-content {
-            display: none;
+            display: none !important;
             height: 100%;
             flex-direction: column;
         }
         .tab-content.active {
-            display: flex;
+            display: flex !important;
         }
         .radar {
             width: 200px;
@@ -165,12 +165,8 @@
             <!-- TAB 2: MAP -->
             <div id="tab-map" class="tab-content w-full h-full relative">
                 <!-- Mock Map Background -->
-                <div class="absolute inset-0 bg-blue-50 overflow-hidden">
-                    <div class="w-[800px] h-[800px] absolute -top-40 -left-40 bg-[radial-gradient(#CBD5E1_1px,transparent_1px)] [background-size:20px_20px] opacity-50"></div>
-                    <!-- Roads Mockup -->
-                    <div class="absolute top-[30%] w-full h-4 bg-white/80 rotate-12"></div>
-                    <div class="absolute left-[40%] w-6 h-full bg-white/80 -rotate-6"></div>
-                    <div class="absolute top-[60%] w-full h-8 bg-white/80 -rotate-12"></div>
+                <div class="absolute inset-0 bg-slate-900 overflow-hidden">
+                    <img src="map_bg.png" class="w-full h-full object-cover opacity-80" alt="Satellite Map">
                 </div>
                 
                 <div class="absolute top-4 left-6 right-6">

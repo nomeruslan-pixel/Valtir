@@ -1,0 +1,35 @@
+workflows:
+  ios-release:
+    name: iOS TestFlight Release
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    environment:
+      node: latest
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install dependencies
+        script: npm install
+      - name: Expo Prebuild (Generate iOS folder)
+        script: npx expo prebuild --platform ios --clean
+      - name: Install CocoaPods
+        script: |
+          cd ios
+          pod install
+      - name: Set up code signing
+        script: |
+          # Codemagic automatically handles code signing when App Store Connect integration is enabled in the UI.
+          xcode-project use-profiles
+      - name: Build IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace "ios/Valtir.xcworkspace" \
+            --scheme "Valtir" \
+            --config Release
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration # Requires connecting Apple Developer portal in Codemagic UI
+        submit_to_testflight: true
