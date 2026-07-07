@@ -2,7 +2,7 @@ workflows:
   ios-release:
     name: iOS TestFlight Release
     integrations:
-      app_store_connect: "Codemagic Key"
+      app_store_connect: "Codemagic"
     max_build_duration: 120
     instance_type: mac_mini_m2
     environment:
