@@ -12,7 +12,7 @@ export const ScannerControls = () => {
       {scanError && <Text style={styles.errorText}>{scanError}</Text>}
       
       <View style={styles.switchContainer}>
-        <Text style={styles.switchLabel}>Показувати всі BLE пристрої</Text>
+        <Text style={styles.switchLabel}>Show all BLE devices</Text>
         <Switch
           value={showAllDevices}
           onValueChange={setShowAllDevices}
@@ -27,7 +27,7 @@ export const ScannerControls = () => {
       >
         {isScanning && <ActivityIndicator color="#fff" style={styles.loader} />}
         <Text style={styles.buttonText}>
-          {isScanning ? 'Остановить сканирование' : 'Начать сканирование'}
+          {isScanning ? 'Stop Scanning' : 'Start Scanning'}
         </Text>
       </TouchableOpacity>
     </View>
