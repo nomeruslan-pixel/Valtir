@@ -1,11 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Animated, Easing } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Animated, Easing, Switch, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, Bluetooth, Cpu } from 'lucide-react-native';
 import { useThemeColors } from '../../theme/useThemeColors';
 import { useBleScanner } from '../../features/ScanBLETag/lib/useBleScanner';
 import { useBleStore } from '../../entities/tracker/model/useBleStore';
-import { ScrollView } from 'react-native';
 
 export const ScanScreen = ({ navigation }: any) => {
   const colors = useThemeColors();
@@ -14,7 +13,7 @@ export const ScanScreen = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
   
   const { startScan, stopScan } = useBleScanner();
-  const { devices, scanError } = useBleStore();
+  const { devices, scanError, showAllDevices, setShowAllDevices } = useBleStore();
 
   useEffect(() => {
     startScan();
@@ -57,6 +56,16 @@ export const ScanScreen = ({ navigation }: any) => {
         <View style={styles.headerTextContainer}>
           <Text style={styles.title}>Scanning...</Text>
           <Text style={styles.subtitle}>Hold your device near the tracker you want to add.</Text>
+          
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, backgroundColor: 'rgba(255,255,255,0.1)', padding: 10, borderRadius: 12 }}>
+            <Text style={{ color: '#ffffff', marginRight: 12, fontWeight: '500' }}>Show all BLE devices</Text>
+            <Switch 
+              value={showAllDevices}
+              onValueChange={setShowAllDevices}
+              trackColor={{ false: '#767577', true: '#F69F3C' }}
+              thumbColor={showAllDevices ? '#ffffff' : '#f4f3f4'}
+            />
+          </View>
         </View>
 
         {/* Radar Animation Area */}
