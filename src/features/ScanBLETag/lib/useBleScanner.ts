@@ -35,8 +35,8 @@ export const useBleScanner = () => {
         const showAll = useBleStore.getState().showAllDevices;
         const deviceName = device.name || device.localName;
         
-        // Додаємо до списку якщо це iBeacon, або якщо увімкнено "Показувати всі" (і пристрій має ім'я)
-        if (iBeaconData || (showAll && deviceName)) {
+        // Додаємо до списку якщо це iBeacon, або якщо увімкнено "Показувати всі" (навіть без імені)
+        if (iBeaconData || showAll) {
           addOrUpdateDevice({
             id: device.id,
             name: deviceName || 'Unknown Device',
