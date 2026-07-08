@@ -32,15 +32,17 @@ export const useBleScanner = () => {
       
       if (device) {
         const iBeaconData = device.manufacturerData ? parseIBeacon(device.manufacturerData) : null;
+        const showAll = useBleStore.getState().showAllDevices;
+        const deviceName = device.name || device.localName;
         
-        // Додаємо до списку ТІЛЬКИ якщо це iBeacon або AltBeacon
-        if (iBeaconData) {
+        // Додаємо до списку якщо це iBeacon, або якщо увімкнено "Показувати всі" (і пристрій має ім'я)
+        if (iBeaconData || (showAll && deviceName)) {
           addOrUpdateDevice({
             id: device.id,
-            name: device.name || device.localName,
+            name: deviceName || 'Unknown Device',
             rssi: device.rssi,
-            rawBase64: device.manufacturerData, // залишаємо для дебагу, якщо цікаво
-            iBeacon: iBeaconData
+            rawBase64: device.manufacturerData, // залишаємо для дебагу
+            iBeacon: iBeaconData || undefined
           });
         }
       }

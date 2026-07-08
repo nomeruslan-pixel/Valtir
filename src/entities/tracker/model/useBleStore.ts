@@ -15,9 +15,11 @@ export interface BleDevice {
 
 interface BleStore {
   isScanning: boolean;
+  showAllDevices: boolean;
   devices: BleDevice[];
   scanError: string | null;
   setIsScanning: (scanning: boolean) => void;
+  setShowAllDevices: (show: boolean) => void;
   setScanError: (error: string | null) => void;
   addOrUpdateDevice: (device: BleDevice) => void;
   clearDevices: () => void;
@@ -25,9 +27,11 @@ interface BleStore {
 
 export const useBleStore = create<BleStore>((set) => ({
   isScanning: false,
+  showAllDevices: false,
   devices: [],
   scanError: null,
   setIsScanning: (isScanning) => set({ isScanning }),
+  setShowAllDevices: (showAllDevices) => set({ showAllDevices }),
   setScanError: (scanError) => set({ scanError }),
   addOrUpdateDevice: (newDevice) =>
     set((state) => {

@@ -1,15 +1,25 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Switch } from 'react-native';
 import { useBleScanner } from '../lib/useBleScanner';
 import { useBleStore } from '../../../entities/tracker/model/useBleStore';
 
 export const ScannerControls = () => {
   const { startScan, stopScan } = useBleScanner();
-  const { isScanning, scanError } = useBleStore();
+  const { isScanning, scanError, showAllDevices, setShowAllDevices } = useBleStore();
 
   return (
     <View style={styles.container}>
       {scanError && <Text style={styles.errorText}>{scanError}</Text>}
+      
+      <View style={styles.switchContainer}>
+        <Text style={styles.switchLabel}>Показувати всі BLE пристрої</Text>
+        <Switch
+          value={showAllDevices}
+          onValueChange={setShowAllDevices}
+          trackColor={{ false: '#767577', true: '#81b0ff' }}
+          thumbColor={showAllDevices ? '#007AFF' : '#f4f3f4'}
+        />
+      </View>
       
       <TouchableOpacity 
         style={[styles.button, isScanning ? styles.buttonStop : styles.buttonStart]} 
@@ -57,5 +67,17 @@ const styles = StyleSheet.create({
     color: '#FF3B30',
     marginBottom: 12,
     textAlign: 'center',
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 16,
+    paddingHorizontal: 8,
+  },
+  switchLabel: {
+    fontSize: 16,
+    color: '#333',
   }
 });
