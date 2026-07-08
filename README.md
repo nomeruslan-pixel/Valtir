@@ -1,78 +1,78 @@
 # Valtir Mobile App 📦📡
 
-Valtir — це мобільний додаток для трекінгу та інвентаризації активів з використанням Bluetooth (BLE) міток та GPS-локацій. 
+Valtir is a mobile application for asset tracking and inventory management using Bluetooth (BLE) tags and GPS locations.
 
-## 🛠 Технологічний стек
+## 🛠 Technology Stack
 
 **Frontend:**
-- [React Native](https://reactnative.dev/) (через [Expo](https://expo.dev/) з Custom Dev Client)
-- **Мова:** TypeScript
-- **Навігація:** React Navigation
-- **Стан (State Management):** Zustand (глобальний стан, BLE) + React Query (кешування та синхронізація API)
-- **Форми:** React Hook Form
+- [React Native](https://reactnative.dev/) (via [Expo](https://expo.dev/) with Custom Dev Client)
+- **Language:** TypeScript
+- **Navigation:** React Navigation
+- **State Management:** Zustand (global state, BLE) + React Query (API caching and synchronization)
+- **Forms:** React Hook Form
 
 **Backend (BaaS):**
 - [Supabase](https://supabase.com/) (PostgreSQL, Auth, Storage)
 
-**Специфічні модулі:**
-- **BLE (Bluetooth):** `react-native-ble-plx` (пошук міток, прив'язка, моніторинг сигналу)
-- **Локація:** `react-native-geolocation-service` (отримання GPS координат)
-- **Карти:** `react-native-maps` (відображення активів)
+**Specific Modules:**
+- **BLE (Bluetooth):** `react-native-ble-plx` (scanning for tags, pairing, signal monitoring)
+- **Location:** `react-native-geolocation-service` (retrieving GPS coordinates)
+- **Maps:** `react-native-maps` (displaying assets on a map)
 
 ---
 
-## 🚀 Основний функціонал (V1)
-1. **Інвентаризація:** Перегляд, додавання та редагування активів.
-2. **BLE Трекінг:** Сканування ефіру, зчитування UUID міток та прив'язка їх до конкретного активу.
-3. **GPS Локація:** Фіксація останньої відомої локації активу при скануванні або редагуванні.
-4. **Мапа:** Перегляд усіх активів на карті (піни з локаціями).
-5. **CSV Імпорт:** Масове завантаження бази інвентарю.
+## 🚀 Core Features (V1)
+1. **Inventory Management:** View, add, and edit assets.
+2. **BLE Tracking:** Scan the area, read tag UUIDs/MACs, and link them to specific assets.
+3. **GPS Location:** Record the last known location of an asset during scanning or editing.
+4. **Map:** View all assets on a map (pins with locations).
+5. **CSV Import:** Bulk upload inventory databases.
 
 ---
 
-## ⚙️ Початок роботи (Development)
+## ⚙️ Getting Started (Development)
 
-Оскільки додаток використовує нативні модулі для Bluetooth (`react-native-ble-plx`), розробка ведеться через **Expo Development Build (Custom Dev Client)**. Ви не можете використовувати стандартний додаток Expo Go.
+Since the app uses native modules for Bluetooth (`react-native-ble-plx`), development is done via an **Expo Development Build (Custom Dev Client)**. You cannot use the standard Expo Go app.
 
-### 1. Встановлення залежностей
+### 1. Install Dependencies
 ```bash
 npm install
 ```
 
-### 2. Налаштування змінних оточення
-Створіть файл `.env` у корені проекту та додайте ключі Supabase:
+### 2. Environment Variables Setup
+Create a `.env` file in the root of the project and add your Supabase keys:
 ```env
 EXPO_PUBLIC_SUPABASE_URL=your-supabase-url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
 
-### 3. Збірка Dev Client
-Для запуску на фізичному пристрої вам потрібен Dev Client.
+### 3. Build the Dev Client
+To run the app on a physical device, you need a Dev Client.
 
-**Якщо ви розробляєте на Mac:**
+**If you are developing on a Mac:**
 ```bash
 npx expo run:ios
 ```
 
-**Якщо ви розробляєте на Windows (хмарна збірка через EAS):**
-1. Переконайтеся, що ви залогінені в Expo (`npx eas login`).
-2. Запустіть хмарну збірку:
+**If you are developing on Windows (Cloud Build via EAS):**
+1. Make sure you are logged into Expo (`npx eas login`).
+2. Start the cloud build:
 ```bash
 eas build --profile development --platform ios
 ```
-3. Після завершення збірки встановіть додаток на свій iPhone (через QR-код).
+3. Once the build is complete, install the app on your iPhone (via QR code).
 
-### 4. Запуск локального сервера
-Коли Dev Client встановлено на телефон, запустіть локальний сервер:
+### 4. Start the Local Server
+When the Dev Client is installed on your phone, start the local server:
 ```bash
 npx expo start --dev-client
 ```
-Відскануйте QR-код з терміналу вашим пристроєм, і додаток завантажиться з підтримкою Hot Reload.
+Scan the QR code from the terminal with your device, and the app will load with Hot Reload support.
 
 ---
 
-## 📱 Дистрибуція
-Для відправки готової збірки клієнту у TestFlight:
+## 📱 Distribution
+To send a production build to a client in TestFlight:
 ```bash
 eas build --profile production --platform ios
 eas submit -p ios
