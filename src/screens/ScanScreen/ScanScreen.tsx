@@ -56,6 +56,7 @@ export const ScanScreen = ({ navigation }: any) => {
         <View style={styles.headerTextContainer}>
           <Text style={styles.title}>Scanning...</Text>
           <Text style={styles.subtitle}>Hold your device near the tracker you want to add.</Text>
+          <Text style={[styles.subtitle, { marginTop: 8, color: '#FBBF24', fontSize: 14 }]}>Please make sure your Bluetooth is turned ON.</Text>
           
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, backgroundColor: 'rgba(255,255,255,0.1)', padding: 10, borderRadius: 12 }}>
             <Text style={{ color: '#ffffff', marginRight: 12, fontWeight: '500' }}>Show all BLE devices</Text>
@@ -98,9 +99,9 @@ export const ScanScreen = ({ navigation }: any) => {
               key={device.id} 
               style={styles.connectingPill}
               onPress={() => {
-                if (device.iBeacon) {
-                  navigation.navigate('ItemForm', { trackerId: device.iBeacon.uuid });
-                }
+                // If it's an iBeacon, pass the UUID. Otherwise, pass the raw MAC address (device.id).
+                const trackerId = device.iBeacon ? device.iBeacon.uuid : device.id;
+                navigation.navigate('ItemForm', { trackerId });
               }}
             >
               <View style={styles.pillIconContainer}>

@@ -35,7 +35,7 @@ export const HomeScreen = ({ navigation }: any) => {
         {/* Hero Card */}
         <View style={styles.heroCard}>
           <View style={styles.heroContent}>
-            <Text style={styles.heroTitle}>Find your item</Text>
+            <Text style={styles.heroTitle}>Add Inventory tracker</Text>
             <Text style={styles.heroSubtitle}>Scan a new BLE tag to track</Text>
             
             <TouchableOpacity 
