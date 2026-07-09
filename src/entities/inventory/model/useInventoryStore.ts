@@ -12,6 +12,7 @@ export type LocationCoords = {
 export type InventoryItem = {
   id: string;
   skuName: string;
+  description?: string;
   qty: number;
   linkedTrackerId: string | null;
   lastLocation: LocationCoords | null;
@@ -23,7 +24,7 @@ interface InventoryState {
   addItem: (item: Omit<InventoryItem, 'id' | 'lastUpdated'>) => void;
   updateItem: (id: string, updates: Partial<Omit<InventoryItem, 'id'>>) => void;
   deleteItem: (id: string) => void;
-  importCSV: (parsedData: { skuName: string; qty: number }[]) => void;
+  importCSV: (parsedData: { skuName: string; description?: string; qty: number }[]) => void;
 }
 
 export const useInventoryStore = create<InventoryState>()(
@@ -65,10 +66,11 @@ export const useInventoryStore = create<InventoryState>()(
           );
 
           if (existingIndex >= 0) {
-            // Update quantity of existing SKU
+            // Update quantity and description of existing SKU
             newItems[existingIndex] = {
               ...newItems[existingIndex],
               qty: row.qty,
+              description: row.description || newItems[existingIndex].description,
               lastUpdated: new Date().toISOString()
             };
           } else {
@@ -76,6 +78,7 @@ export const useInventoryStore = create<InventoryState>()(
             newItems.push({
               id: uuidv4(),
               skuName: row.skuName.trim(),
+              description: row.description?.trim(),
               qty: row.qty,
               linkedTrackerId: null,
               lastLocation: null,

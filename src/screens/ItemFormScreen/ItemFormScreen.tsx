@@ -18,6 +18,7 @@ export const ItemFormScreen = ({ navigation, route }: any) => {
   const existingItem = itemId ? items.find(i => i.id === itemId) : null;
 
   const [skuName, setSkuName] = useState(existingItem?.skuName || '');
+  const [description, setDescription] = useState(existingItem?.description || '');
   const [qty, setQty] = useState(existingItem?.qty?.toString() || '1');
   const [linkedTrackerId, setLinkedTrackerId] = useState<string | null>(existingItem?.linkedTrackerId || trackerId || null);
   const [isSaving, setIsSaving] = useState(false);
@@ -30,7 +31,7 @@ export const ItemFormScreen = ({ navigation, route }: any) => {
 
   const handleSave = async () => {
     if (!skuName.trim()) {
-      Alert.alert('Error', 'SKU Name is required');
+      Alert.alert('Error', 'Part Number is required');
       return;
     }
 
@@ -52,6 +53,7 @@ export const ItemFormScreen = ({ navigation, route }: any) => {
 
     const payload = {
       skuName: skuName.trim(),
+      description: description.trim(),
       qty: parseInt(qty, 10) || 0,
       linkedTrackerId,
       lastLocation: coords,
@@ -80,13 +82,25 @@ export const ItemFormScreen = ({ navigation, route }: any) => {
       <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
         
         <View style={styles.formGroup}>
-          <Text style={styles.label}>SKU Name</Text>
+          <Text style={styles.label}>Part Number</Text>
           <TextInput
             style={styles.input}
             value={skuName}
             onChangeText={setSkuName}
-            placeholder="e.g. Generator 5000W"
+            placeholder="e.g. PN-12345"
             placeholderTextColor={colors.mutedForeground}
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Description</Text>
+          <TextInput
+            style={[styles.input, { minHeight: 80 }]}
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Optional item description..."
+            placeholderTextColor={colors.mutedForeground}
+            multiline
           />
         </View>
 

@@ -1,5 +1,6 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
 import { PickTicket } from '../store/useTicketStore';
 
 export const generateAndSharePDF = async (ticket: PickTicket) => {
@@ -7,14 +8,27 @@ export const generateAndSharePDF = async (ticket: PickTicket) => {
     const itemsHtml = ticket.items.map(item => `
       <tr>
         <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name}</td>
-        <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.sku}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.description || '-'}</td>
         <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.targetQuantity}</td>
         <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.pickedQuantity}</td>
         <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold; color: ${item.status === 'picked' ? 'green' : 'red'};">${item.status}</td>
       </tr>
     `).join('');
 
-    const photosHtml = ticket.photos.map(photo => `
+    // Pre-process photos into base64 to ensure they render in the PDF
+    const base64Photos = await Promise.all(
+      ticket.photos.map(async (photoUri) => {
+        try {
+          const base64 = await FileSystem.readAsStringAsync(photoUri, { encoding: FileSystem.EncodingType.Base64 });
+          return \`data:image/jpeg;base64,\${base64}\`;
+        } catch (e) {
+          console.error("Failed to read photo:", photoUri, e);
+          return photoUri; // Fallback to original uri
+        }
+      })
+    );
+
+    const photosHtml = base64Photos.map(photo => `
       <img src="${photo}" style="width: 45%; margin: 2%; border-radius: 8px; object-fit: cover;" />
     `).join('');
 
@@ -40,8 +54,8 @@ export const generateAndSharePDF = async (ticket: PickTicket) => {
             <thead>
               <tr>
                 <th>Item Name</th>
-                <th>SKU</th>
-                <th>Target</th>
+                <th>Description</th>
+                <th>On Order</th>
                 <th>Picked</th>
                 <th>Status</th>
               </tr>

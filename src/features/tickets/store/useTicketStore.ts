@@ -10,6 +10,7 @@ export type ItemStatus = 'pending' | 'picked';
 export interface PickTicketItem {
   id: string;
   name: string;
+  description: string;
   sku: string;
   targetQuantity: number;
   pickedQuantity: number;
@@ -42,10 +43,12 @@ export const useTicketStore = create<TicketStore>()(
       tickets: [],
       
       addTicketsFromCSV: (csvData: any[]) => {
-        // Group raw CSV rows by an identifier (e.g., TicketNumber)
-        // Expected basic CSV structure: TicketNumber, ItemName, SKU, Quantity
         const grouped = csvData.reduce((acc: any, row: any) => {
-          const tId = row.TicketNumber || row.ticket_number || 'UNKNOWN';
+          const keys = Object.keys(row);
+          const tIdKey = keys.find(k => k.toLowerCase().includes('ticket')) || keys[0];
+          const tId = row[tIdKey] ? row[tIdKey].toString().trim() : 'UNKNOWN';
+
+          if (!tId) return acc; // Skip completely empty rows
           if (!acc[tId]) {
             acc[tId] = [];
           }
@@ -54,15 +57,24 @@ export const useTicketStore = create<TicketStore>()(
         }, {});
 
         const newTickets: PickTicket[] = Object.keys(grouped).map(ticketNum => {
+          if (ticketNum === 'UNKNOWN') return null; // Ignore if unable to parse ticket
           const rows = grouped[ticketNum];
-          const items: PickTicketItem[] = rows.map((r: any) => ({
-            id: uuidv4(),
-            name: r.ItemName || r.item_name || 'Unknown Item',
-            sku: r.SKU || r.sku || '',
-            targetQuantity: parseInt(r.Quantity || r.quantity || '1', 10),
-            pickedQuantity: 0,
-            status: 'pending',
-          }));
+          const items: PickTicketItem[] = rows.map((r: any) => {
+            const keys = Object.keys(r);
+            const nameKey = keys.find(k => k.toLowerCase().includes('item') || k.toLowerCase().includes('name') || k.toLowerCase().includes('sku')) || keys[1];
+            const descKey = keys.find(k => k.toLowerCase().includes('desc')) || null;
+            const qtyKey = keys.find(k => k.toLowerCase().includes('qty') || k.toLowerCase().includes('quantity')) || keys[2];
+            
+            return {
+              id: uuidv4(),
+              name: r[nameKey] ? r[nameKey].toString().trim() : 'Unknown Item',
+              description: descKey && r[descKey] ? r[descKey].toString().trim() : '',
+              sku: r[nameKey] ? r[nameKey].toString().trim() : '', // using item name as sku fallback
+              targetQuantity: parseInt(r[qtyKey], 10) || 1,
+              pickedQuantity: 0,
+              status: 'pending',
+            };
+          });
 
           return {
             id: uuidv4(),
@@ -74,8 +86,10 @@ export const useTicketStore = create<TicketStore>()(
           };
         });
 
+        const validTickets = newTickets.filter(t => t !== null) as PickTicket[];
+
         set((state) => ({
-          tickets: [...state.tickets, ...newTickets]
+          tickets: [...state.tickets, ...validTickets]
         }));
       },
 

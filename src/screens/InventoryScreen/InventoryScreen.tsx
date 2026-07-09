@@ -43,11 +43,13 @@ export const InventoryScreen = ({ navigation }: any) => {
           const data = results.data as any[];
           const parsedData = data.map(row => {
             const keys = Object.keys(row);
-            const nameKey = keys.find(k => k.toLowerCase().includes('name') || k.toLowerCase().includes('sku')) || keys[0];
+            const nameKey = keys.find(k => k.toLowerCase().includes('name') || k.toLowerCase().includes('sku') || k.toLowerCase().includes('part')) || keys[0];
+            const descKey = keys.find(k => k.toLowerCase().includes('desc')) || null;
             const qtyKey = keys.find(k => k.toLowerCase().includes('qty') || k.toLowerCase().includes('quantity')) || keys[1];
             
             return {
               skuName: row[nameKey],
+              description: descKey ? row[descKey] : undefined,
               qty: parseInt(row[qtyKey], 10) || 0,
             };
           });
