@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Key, Briefcase, Wallet, ChevronRight, ClipboardList, Plus, FileUp, Package, MapPin } from 'lucide-react-native';
+import { Key, Briefcase, Wallet, ChevronRight, ClipboardList, Plus, FileUp, Package, MapPin, Radar } from 'lucide-react-native';
 import { useThemeColors } from '../../theme/useThemeColors';
 import { useInventoryStore } from '../../entities/inventory/model/useInventoryStore';
 import * as DocumentPicker from 'expo-document-picker';
@@ -131,6 +131,16 @@ export const InventoryScreen = ({ navigation }: any) => {
                   </View>
                 </View>
                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  {isTracked && item.linkedTrackerId && (
+                    <TouchableOpacity 
+                      style={{padding: 8, marginRight: 8, backgroundColor: 'rgba(59, 130, 246, 0.15)', borderRadius: 20}}
+                      onPress={() => {
+                        navigation.navigate('Radar', { trackerId: item.linkedTrackerId });
+                      }}
+                    >
+                      <Radar color="#3b82f6" size={20} />
+                    </TouchableOpacity>
+                  )}
                   {isTracked && item.lastLocation && (
                     <TouchableOpacity 
                       style={{padding: 8, marginRight: 8, backgroundColor: 'rgba(246, 159, 60, 0.15)', borderRadius: 20}}

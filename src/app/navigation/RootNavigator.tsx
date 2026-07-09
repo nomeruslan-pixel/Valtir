@@ -14,6 +14,7 @@ import { TicketDashboardScreen } from '../../screens/TicketDashboardScreen/Ticke
 import { TicketDetailsScreen } from '../../screens/TicketDetailsScreen/TicketDetailsScreen';
 import { LegalScreen } from '../../screens/LegalScreen/LegalScreen';
 import { ItemFormScreen } from '../../screens/ItemFormScreen/ItemFormScreen';
+import { RadarScreen } from '../../screens/RadarScreen/RadarScreen';
 import { useThemeColors } from '../../theme/useThemeColors';
 
 const Stack = createNativeStackNavigator();
@@ -133,6 +134,7 @@ export const RootNavigator = () => {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Tabs" component={TabNavigator} />
         <Stack.Screen name="Scan" component={ScanScreen} options={{ presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="Radar" component={RadarScreen} options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="ItemForm" component={ItemFormScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="TicketDashboard" component={TicketDashboardScreen} />
         <Stack.Screen name="TicketDetails" component={TicketDetailsScreen} />

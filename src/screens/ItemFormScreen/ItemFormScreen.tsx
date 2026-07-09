@@ -127,12 +127,20 @@ export const ItemFormScreen = ({ navigation, route }: any) => {
               </TouchableOpacity>
             )}
             {linkedTrackerId && (
-              <TouchableOpacity 
-                style={styles.unlinkButton}
-                onPress={() => setLinkedTrackerId(null)}
-              >
-                <Text style={styles.unlinkButtonText}>Unlink</Text>
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity 
+                  style={[styles.linkButton, { backgroundColor: '#3b82f6' }]}
+                  onPress={() => navigation.navigate('Radar', { trackerId: linkedTrackerId })}
+                >
+                  <Text style={styles.linkButtonText}>Find</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.unlinkButton}
+                  onPress={() => setLinkedTrackerId(null)}
+                >
+                  <Text style={styles.unlinkButtonText}>Unlink</Text>
+                </TouchableOpacity>
+              </View>
             )}
           </View>
         </View>
