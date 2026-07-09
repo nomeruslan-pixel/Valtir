@@ -20,7 +20,7 @@ export const generateAndSharePDF = async (ticket: PickTicket) => {
       ticket.photos.map(async (photoUri) => {
         try {
           const base64 = await FileSystem.readAsStringAsync(photoUri, { encoding: FileSystem.EncodingType.Base64 });
-          return \`data:image/jpeg;base64,\${base64}\`;
+          return `data:image/jpeg;base64,${base64}`;
         } catch (e) {
           console.error("Failed to read photo:", photoUri, e);
           return photoUri; // Fallback to original uri
