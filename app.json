@@ -10,6 +10,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.valtir.app",
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "Valtir needs location access to map scanned assets.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Valtir needs location access to map scanned assets in background."
       }
