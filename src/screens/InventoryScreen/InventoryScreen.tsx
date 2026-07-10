@@ -4,8 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Key, Briefcase, Wallet, ChevronRight, ClipboardList, Plus, FileUp, Package, MapPin, Radar } from 'lucide-react-native';
 import { useThemeColors } from '../../theme/useThemeColors';
 import { useInventoryStore } from '../../entities/inventory/model/useInventoryStore';
-import * as DocumentPicker from 'expo-document-picker';
-import Papa from 'papaparse';
 
 export const InventoryScreen = ({ navigation }: any) => {
   const colors = useThemeColors();
@@ -13,8 +11,6 @@ export const InventoryScreen = ({ navigation }: any) => {
   const [activeFilter, setActiveFilter] = useState('All Items');
   
   const items = useInventoryStore(state => state.items);
-  const importCSV = useInventoryStore(state => state.importCSV);
-
   const filters = ['All Items', 'Tracked', 'Untracked'];
 
   const filteredItems = items.filter(item => {
@@ -23,63 +19,11 @@ export const InventoryScreen = ({ navigation }: any) => {
     return true;
   });
 
-  const handleImportCSV = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['text/csv', 'text/comma-separated-values', 'application/csv'],
-      });
-
-      if (result.canceled) return;
-
-      const fileUri = result.assets[0].uri;
-      const response = await fetch(fileUri);
-      const csvText = await response.text();
-
-      Papa.parse(csvText, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          // Assume columns might be named 'item name' and 'qty on hand' (case insensitive match later, or map index)
-          const data = results.data as any[];
-          const parsedData = data.map(row => {
-            const keys = Object.keys(row);
-            const nameKey = keys.find(k => k.toLowerCase().includes('name') || k.toLowerCase().includes('sku') || k.toLowerCase().includes('part')) || keys[0];
-            const descKey = keys.find(k => k.toLowerCase().includes('desc')) || null;
-            const qtyKey = keys.find(k => k.toLowerCase().includes('qty') || k.toLowerCase().includes('quantity')) || keys[1];
-            
-            return {
-              skuName: row[nameKey],
-              description: descKey ? row[descKey] : undefined,
-              qty: parseInt(row[qtyKey], 10) || 0,
-            };
-          });
-
-          importCSV(parsedData);
-          Alert.alert('Success', `Imported ${parsedData.length} items from CSV.`);
-        },
-        error: (error: any) => {
-          Alert.alert('Error', `Failed to parse CSV: ${error.message}`);
-        }
-      });
-
-    } catch (e: any) {
-      Alert.alert('Error', 'Failed to read file: ' + e.message);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <Text style={styles.headerTitle}>Inventory</Text>
-          
-          <TouchableOpacity 
-            style={styles.importButton}
-            onPress={handleImportCSV}
-          >
-            <FileUp color={colors.primaryForeground} size={16} style={{ marginRight: 6 }} />
-            <Text style={styles.importText}>Import CSV</Text>
-          </TouchableOpacity>
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtersContainer}>

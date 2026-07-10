@@ -26,9 +26,12 @@ export const HomeScreen = ({ navigation }: any) => {
           <Text style={styles.headerTitle}>Valtir Hub</Text>
           <Text style={styles.headerSubtitle}>Welcome back</Text>
         </View>
-        <View style={styles.avatar}>
+        <TouchableOpacity 
+          style={styles.avatar}
+          onPress={() => navigation.navigate('Profile')}
+        >
           <Text style={styles.avatarText}>V</Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
@@ -106,33 +109,6 @@ export const HomeScreen = ({ navigation }: any) => {
               </View>
             ))
           )}
-        </View>
-
-        {/* B2B Warehouse Module Entry */}
-        <View style={styles.recentSection}>
-          <View style={styles.recentHeader}>
-            <Text style={styles.sectionTitle}>Warehouse Operations</Text>
-          </View>
-          
-          <TouchableOpacity 
-            style={styles.b2bCard}
-            onPress={() => navigation.navigate('TicketDashboard')}
-          >
-            <View style={styles.b2bCardInner}>
-              <View style={styles.b2bIconContainer}>
-                <Package color={colors.primary} size={28} />
-              </View>
-              <View style={styles.b2bTextContainer}>
-                <Text style={styles.b2bTitle}>Pick Tickets</Text>
-                <Text style={styles.b2bSubtitle}>Manage B2B order fulfillment</Text>
-              </View>
-              <View style={styles.b2bChevron}>
-                <Text style={{ color: colors.primary, fontSize: 20, fontWeight: 'bold' }}>→</Text>
-              </View>
-            </View>
-            {/* Decorative background shape */}
-            <View style={styles.b2bDecoration} />
-          </TouchableOpacity>
         </View>
 
         {/* Padding for bottom tab bar */}

@@ -3,7 +3,7 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
-import { Home, Map as MapIcon, Scan as ScanIcon, List, User } from 'lucide-react-native';
+import { Home, Map as MapIcon, Scan as ScanIcon, List, Clipboard } from 'lucide-react-native';
 
 import { HomeScreen } from '../../screens/HomeScreen/HomeScreen';
 import { MapScreen } from '../../screens/MapScreen/MapScreen';
@@ -118,10 +118,10 @@ function TabNavigator() {
         }}
       />
       <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen} 
+        name="Warehouse" 
+        component={TicketDashboardScreen} 
         options={{
-          tabBarIcon: ({ color, size }) => <User color={color} size={size} />
+          tabBarIcon: ({ color, size }) => <Clipboard color={color} size={size} />
         }}
       />
     </Tab.Navigator>
@@ -137,6 +137,7 @@ export const RootNavigator = () => {
         <Stack.Screen name="Radar" component={RadarScreen} options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="ItemForm" component={ItemFormScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="TicketDashboard" component={TicketDashboardScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="TicketDetails" component={TicketDetailsScreen} />
         <Stack.Screen name="Legal" component={LegalScreen} options={{ presentation: 'modal' }} />
       </Stack.Navigator>

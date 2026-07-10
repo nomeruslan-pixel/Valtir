@@ -1,33 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Upload, ClipboardList, ChevronRight, ArrowLeft } from 'lucide-react-native';
+import { ClipboardList, ChevronRight, ArrowLeft } from 'lucide-react-native';
 import { useThemeColors } from '../../theme/useThemeColors';
 import { useTicketStore, TicketStatus } from '../../features/tickets/store/useTicketStore';
-import { pickAndParseCSV } from '../../features/tickets/utils/csvParser';
 
 export const TicketDashboardScreen = ({ navigation }: any) => {
-  const { tickets, addTicketsFromCSV } = useTicketStore();
+  const { tickets } = useTicketStore();
   const [activeFilter, setActiveFilter] = useState<TicketStatus | 'all'>('all');
   const colors = useThemeColors();
   const styles = getStyles(colors);
-
-  const handleImport = async () => {
-    try {
-      const data = await pickAndParseCSV();
-      if (data) {
-        if (data.length === 0) {
-          Alert.alert('Error', 'The CSV file is empty or could not be parsed properly.');
-          return;
-        }
-        addTicketsFromCSV(data);
-        Alert.alert('Success', `Imported ${data.length} rows of data.`);
-      }
-      // If data is null, the picker was canceled or an error was already shown in pickAndParseCSV
-    } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred during import.');
-    }
-  };
 
   const filteredTickets = tickets.filter(
     (t) => activeFilter === 'all' || t.status === activeFilter
@@ -51,10 +33,6 @@ export const TicketDashboardScreen = ({ navigation }: any) => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Pick Tickets</Text>
         </View>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity onPress={handleImport} style={styles.importButton}>
-            <Upload color={colors.primary} size={20} />
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -86,11 +64,8 @@ export const TicketDashboardScreen = ({ navigation }: any) => {
             <ClipboardList color={colors.mutedForeground} size={48} />
             <Text style={styles.emptyTitle}>No Tickets Found</Text>
             <Text style={styles.emptySubtitle}>
-              Import a CSV file to get started with your pick list.
+              Go to Profile Settings to import a Pick Tickets CSV file.
             </Text>
-            <TouchableOpacity style={styles.emptyButton} onPress={handleImport}>
-              <Text style={styles.emptyButtonText}>Import CSV</Text>
-            </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.listContainer}>

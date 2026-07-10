@@ -1,19 +1,84 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Bell, Shield, Moon, ChevronRight, LogOut, X, UserX, Bluetooth } from 'lucide-react-native';
+import { Bell, Shield, Moon, ChevronRight, LogOut, X, UserX, Bluetooth, FileUp, ClipboardList, ArrowLeft } from 'lucide-react-native';
 import { useUserStore } from '../../features/user/store/useUserStore';
 import { useBleStore } from '../../entities/tracker/model/useBleStore';
 import { useThemeColors } from '../../theme/useThemeColors';
+import * as DocumentPicker from 'expo-document-picker';
+import Papa from 'papaparse';
+import { useInventoryStore } from '../../entities/inventory/model/useInventoryStore';
+import { useTicketStore } from '../../features/tickets/store/useTicketStore';
+import { pickAndParseCSV } from '../../features/tickets/utils/csvParser';
 
 export const ProfileScreen = ({ navigation }: any) => {
   const { name, email, notificationsEnabled, darkMode, updateProfile, toggleNotifications, toggleDarkMode, logout } = useUserStore();
   const { showAllDevices, setShowAllDevices } = useBleStore();
+  const importInventoryCSV = useInventoryStore(state => state.importCSV);
+  const addTicketsFromCSV = useTicketStore(state => state.addTicketsFromCSV);
   const colors = useThemeColors();
   const styles = getStyles(colors);
   const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [editName, setEditName] = useState(name);
   const [editEmail, setEditEmail] = useState(email);
+
+  const handleImportInventory = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['text/csv', 'text/comma-separated-values', 'application/csv'],
+      });
+
+      if (result.canceled) return;
+
+      const fileUri = result.assets[0].uri;
+      const response = await fetch(fileUri);
+      const csvText = await response.text();
+
+      Papa.parse(csvText, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const data = results.data as any[];
+          const parsedData = data.map(row => {
+            const keys = Object.keys(row);
+            const nameKey = keys.find(k => k.toLowerCase().includes('name') || k.toLowerCase().includes('sku') || k.toLowerCase().includes('part')) || keys[0];
+            const descKey = keys.find(k => k.toLowerCase().includes('desc')) || null;
+            const qtyKey = keys.find(k => k.toLowerCase().includes('qty') || k.toLowerCase().includes('quantity')) || keys[1];
+            
+            return {
+              skuName: row[nameKey],
+              description: descKey ? row[descKey] : undefined,
+              qty: parseInt(row[qtyKey], 10) || 0,
+            };
+          });
+
+          importInventoryCSV(parsedData);
+          Alert.alert('Success', `Imported ${parsedData.length} items from CSV.`);
+        },
+        error: (error: any) => {
+          Alert.alert('Error', `Failed to parse CSV: ${error.message}`);
+        }
+      });
+    } catch (e: any) {
+      Alert.alert('Error', 'Failed to read file: ' + e.message);
+    }
+  };
+
+  const handleImportTickets = async () => {
+    try {
+      const data = await pickAndParseCSV();
+      if (data) {
+        if (data.length === 0) {
+          Alert.alert('Error', 'The CSV file is empty or could not be parsed properly.');
+          return;
+        }
+        addTicketsFromCSV(data);
+        Alert.alert('Success', `Imported ${data.length} tickets from CSV.`);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'An unexpected error occurred during import.');
+    }
+  };
 
   const handleSaveProfile = () => {
     if (!editName.trim() || !editEmail.trim()) {
@@ -147,6 +212,28 @@ export const ProfileScreen = ({ navigation }: any) => {
                   <View style={[styles.toggleKnob, showAllDevices ? styles.toggleKnobRight : styles.toggleKnobLeft]} />
                 </TouchableOpacity>
               </View>
+            </View>
+          </View>
+
+          {/* Data Management Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>DATA MANAGEMENT</Text>
+            <View style={styles.card}>
+              <TouchableOpacity style={[styles.row, styles.borderBottom]} onPress={handleImportInventory}>
+                <View style={styles.rowLeft}>
+                  <FileUp color={colors.primary} size={20} />
+                  <Text style={styles.rowText}>Import Inventory CSV</Text>
+                </View>
+                <ChevronRight color={colors.border} size={20} />
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.row} onPress={handleImportTickets}>
+                <View style={styles.rowLeft}>
+                  <ClipboardList color={colors.primary} size={20} />
+                  <Text style={styles.rowText}>Import Pick Tickets CSV</Text>
+                </View>
+                <ChevronRight color={colors.border} size={20} />
+              </TouchableOpacity>
             </View>
           </View>
 

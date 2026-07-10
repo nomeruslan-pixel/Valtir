@@ -3,6 +3,7 @@ import { useBleStore } from '../../../entities/tracker/model/useBleStore';
 import { bleService } from '../../../shared/lib/ble/bleService';
 import { requestBluetoothPermissions } from '../../../shared/lib/permissions/permissions';
 import { parseIBeacon } from '../../../shared/lib/ble/parseIBeacon';
+import { State } from 'react-native-ble-plx';
 
 export const useBleScanner = () => {
   const { isScanning, setIsScanning, addOrUpdateDevice, setScanError, clearDevices } = useBleStore();
@@ -19,34 +20,47 @@ export const useBleScanner = () => {
 
     setScanError(null);
     clearDevices();
-    setIsScanning(true);
 
-    manager.startDeviceScan(null, null, (error, device) => {
-      if (error) {
-        console.warn('BLE Scan Error:', error);
-        setScanError(error.message);
-        setIsScanning(false);
-        manager.stopDeviceScan();
-        return;
-      }
-      
-      if (device) {
-        const iBeaconData = device.manufacturerData ? parseIBeacon(device.manufacturerData) : null;
-        const showAll = useBleStore.getState().showAllDevices;
-        const deviceName = device.name || device.localName;
-        
-        // Додаємо до списку якщо це iBeacon, або якщо увімкнено "Показувати всі" (навіть без імені)
-        if (iBeaconData || showAll) {
-          addOrUpdateDevice({
-            id: device.id,
-            name: deviceName || 'Unknown Device',
-            rssi: device.rssi,
-            rawBase64: device.manufacturerData, // залишаємо для дебагу
-            iBeacon: iBeaconData || undefined
-          });
+    const start = () => {
+      setIsScanning(true);
+      manager.startDeviceScan(null, null, (error, device) => {
+        if (error) {
+          console.warn('BLE Scan Error:', error);
+          setScanError(error.message);
+          setIsScanning(false);
+          manager.stopDeviceScan();
+          return;
         }
-      }
-    });
+        
+        if (device) {
+          const iBeaconData = device.manufacturerData ? parseIBeacon(device.manufacturerData) : null;
+          const showAll = useBleStore.getState().showAllDevices;
+          const deviceName = device.name || device.localName;
+          
+          if (iBeaconData || showAll) {
+            addOrUpdateDevice({
+              id: device.id,
+              name: deviceName || 'Unknown Device',
+              rssi: device.rssi,
+              rawBase64: device.manufacturerData,
+              iBeacon: iBeaconData || undefined
+            });
+          }
+        }
+      });
+    };
+
+    const currentState = await manager.state();
+    if (currentState === State.PoweredOn) {
+      start();
+    } else {
+      const subscription = manager.onStateChange((state) => {
+        if (state === State.PoweredOn) {
+          subscription.remove();
+          start();
+        }
+      }, true);
+    }
   }, [manager, setIsScanning, setScanError, clearDevices, addOrUpdateDevice]);
 
   const stopScan = useCallback(() => {
