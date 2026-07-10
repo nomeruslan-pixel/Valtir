@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Bell, Shield, Moon, ChevronRight, LogOut, X, UserX } from 'lucide-react-native';
+import { Bell, Shield, Moon, ChevronRight, LogOut, X, UserX, Bluetooth } from 'lucide-react-native';
 import { useUserStore } from '../../features/user/store/useUserStore';
+import { useBleStore } from '../../entities/tracker/model/useBleStore';
 import { useThemeColors } from '../../theme/useThemeColors';
 
 export const ProfileScreen = ({ navigation }: any) => {
   const { name, email, notificationsEnabled, darkMode, updateProfile, toggleNotifications, toggleDarkMode, logout } = useUserStore();
+  const { showAllDevices, setShowAllDevices } = useBleStore();
   const colors = useThemeColors();
   const styles = getStyles(colors);
   const [isEditModalVisible, setEditModalVisible] = useState(false);
@@ -125,6 +127,26 @@ export const ProfileScreen = ({ navigation }: any) => {
                 </TouchableOpacity>
               </View>
 
+            </View>
+          </View>
+
+          {/* Scanner Settings Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>SCANNER</Text>
+            <View style={styles.card}>
+              <View style={styles.row}>
+                <View style={styles.rowLeft}>
+                  <Bluetooth color={colors.mutedForeground} size={20} />
+                  <Text style={styles.rowText}>Show all BLE devices</Text>
+                </View>
+                <TouchableOpacity 
+                  activeOpacity={0.8} 
+                  onPress={() => setShowAllDevices(!showAllDevices)}
+                  style={[styles.toggle, showAllDevices ? styles.toggleActive : styles.toggleInactive]}
+                >
+                  <View style={[styles.toggleKnob, showAllDevices ? styles.toggleKnobRight : styles.toggleKnobLeft]} />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 

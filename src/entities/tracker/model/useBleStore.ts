@@ -27,7 +27,7 @@ interface BleStore {
 
 export const useBleStore = create<BleStore>((set) => ({
   isScanning: false,
-  showAllDevices: false,
+  showAllDevices: true,
   devices: [],
   scanError: null,
   setIsScanning: (isScanning) => set({ isScanning }),

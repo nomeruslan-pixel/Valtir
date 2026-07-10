@@ -13,7 +13,7 @@ export const ScanScreen = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
   
   const { startScan, stopScan } = useBleScanner();
-  const { devices, scanError, showAllDevices, setShowAllDevices } = useBleStore();
+  const { devices, scanError } = useBleStore();
 
   useEffect(() => {
     startScan();
@@ -55,18 +55,7 @@ export const ScanScreen = ({ navigation }: any) => {
         {/* Text Headers */}
         <View style={styles.headerTextContainer}>
           <Text style={styles.title}>Scanning...</Text>
-          <Text style={styles.subtitle}>Hold your device near the tracker you want to add.</Text>
           <Text style={[styles.subtitle, { marginTop: 8, color: '#FBBF24', fontSize: 14 }]}>Please make sure your Bluetooth is turned ON.</Text>
-          
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, backgroundColor: 'rgba(255,255,255,0.1)', padding: 10, borderRadius: 12 }}>
-            <Text style={{ color: '#ffffff', marginRight: 12, fontWeight: '500' }}>Show all BLE devices</Text>
-            <Switch 
-              value={showAllDevices}
-              onValueChange={setShowAllDevices}
-              trackColor={{ false: '#767577', true: '#F69F3C' }}
-              thumbColor={showAllDevices ? '#ffffff' : '#f4f3f4'}
-            />
-          </View>
         </View>
 
         {/* Radar Animation Area */}
@@ -122,9 +111,6 @@ export const ScanScreen = ({ navigation }: any) => {
               </View>
             </TouchableOpacity>
           ))}
-          {devices.length === 0 && (
-            <Text style={[styles.subtitle, { marginTop: 20 }]}>Searching for nearby devices...</Text>
-          )}
         </ScrollView>
 
       </View>

@@ -4,11 +4,13 @@ import { ArrowLeft, Check, Minus, Plus, Camera, FileText, Trash2, X } from 'luci
 import * as ImagePicker from 'expo-image-picker';
 import { useThemeColors } from '../../theme/useThemeColors';
 import { useTicketStore, PickTicketItem } from '../../features/tickets/store/useTicketStore';
+import { useInventoryStore } from '../../entities/inventory/model/useInventoryStore';
 import { generateAndSharePDF } from '../../features/tickets/utils/pdfGenerator';
 
 export const TicketDetailsScreen = ({ route, navigation }: any) => {
   const { ticketId } = route.params;
   const { tickets, updateItemQuantity, addPhoto, removePhoto, deleteTicket } = useTicketStore();
+  const { items: inventoryItems, updateItem: updateInventoryItem } = useInventoryStore();
   const colors = useThemeColors();
   const styles = getStyles(colors);
 
@@ -28,15 +30,53 @@ export const TicketDetailsScreen = ({ route, navigation }: any) => {
   }
 
   const handleToggleItem = (item: PickTicketItem) => {
-    if (item.status === 'picked' || item.pickedQuantity >= item.targetQuantity) {
+    const isPicked = item.status === 'picked' || item.pickedQuantity >= item.targetQuantity;
+    
+    if (isPicked) {
+      // Un-picking all: restore inventory
+      const invItem = inventoryItems.find(i => i.sku === item.sku);
+      if (invItem) {
+        updateInventoryItem(invItem.id, { quantity: invItem.quantity + item.pickedQuantity });
+      }
       updateItemQuantity(ticket.id, item.id, 0);
     } else {
+      // Picking all remaining target quantity
+      const qtyToAdd = item.targetQuantity - item.pickedQuantity;
+      const invItem = inventoryItems.find(i => i.sku === item.sku);
+      
+      if (!invItem || invItem.quantity < qtyToAdd) {
+        Alert.alert('Error', 'This item is not available or has insufficient quantity in inventory.');
+        return;
+      }
+      
+      updateInventoryItem(invItem.id, { quantity: invItem.quantity - qtyToAdd });
       updateItemQuantity(ticket.id, item.id, item.targetQuantity);
     }
   };
 
   const handleAdjustQuantity = (item: PickTicketItem, delta: number) => {
     const newQuantity = Math.max(0, Math.min(item.targetQuantity, item.pickedQuantity + delta));
+    const actualDelta = newQuantity - item.pickedQuantity;
+    
+    if (actualDelta === 0) return;
+
+    const invItem = inventoryItems.find(i => i.sku === item.sku);
+
+    if (actualDelta > 0) {
+      // Trying to pick more
+      if (!invItem || invItem.quantity < actualDelta) {
+        Alert.alert('Error', 'This item is not available or has insufficient quantity in inventory.');
+        return;
+      }
+      // Decrement from inventory
+      updateInventoryItem(invItem.id, { quantity: invItem.quantity - actualDelta });
+    } else {
+      // Un-picking (delta is negative), so add back to inventory
+      if (invItem) {
+        updateInventoryItem(invItem.id, { quantity: invItem.quantity + Math.abs(actualDelta) });
+      }
+    }
+
     updateItemQuantity(ticket.id, item.id, newQuantity);
   };
 

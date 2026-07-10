@@ -77,9 +77,16 @@ export const generateAndSharePDF = async (ticket: PickTicket) => {
 
     const { uri } = await Print.printToFileAsync({ html: htmlContent });
     
+    // Rename the file to include the ticket number
+    const newUri = FileSystem.documentDirectory + `PickTicket_${ticket.externalId}.pdf`;
+    await FileSystem.moveAsync({
+      from: uri,
+      to: newUri
+    });
+    
     const isAvailable = await Sharing.isAvailableAsync();
     if (isAvailable) {
-      await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+      await Sharing.shareAsync(newUri, { UTI: '.pdf', mimeType: 'application/pdf' });
     }
   } catch (error) {
     console.error('Error generating PDF', error);
