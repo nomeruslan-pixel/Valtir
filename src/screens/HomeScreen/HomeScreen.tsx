@@ -111,6 +111,13 @@ export const HomeScreen = ({ navigation }: any) => {
           )}
         </View>
 
+        {/* Version Indicator */}
+        <View style={{ alignItems: 'center', marginBottom: 20 }}>
+          <Text style={{ color: colors.mutedForeground, fontSize: 12, fontWeight: 'bold' }}>
+            v1.0.0 (Build 27) - UI Updated
+          </Text>
+        </View>
+
         {/* Padding for bottom tab bar */}
         <View style={{ height: 100 }} />
 
