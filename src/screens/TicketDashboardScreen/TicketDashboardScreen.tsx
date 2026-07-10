@@ -33,7 +33,6 @@ export const TicketDashboardScreen = ({ navigation }: any) => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Pick Tickets</Text>
         </View>
-        </View>
       </View>
 
       <View style={styles.tabsContainer}>
