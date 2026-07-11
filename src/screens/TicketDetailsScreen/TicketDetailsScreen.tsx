@@ -34,22 +34,22 @@ export const TicketDetailsScreen = ({ route, navigation }: any) => {
     
     if (isPicked) {
       // Un-picking all: restore inventory
-      const invItem = inventoryItems.find(i => i.sku === item.sku);
+      const invItem = inventoryItems.find(i => i.skuName === item.sku);
       if (invItem) {
-        updateInventoryItem(invItem.id, { quantity: invItem.quantity + item.pickedQuantity });
+        updateInventoryItem(invItem.id, { qty: invItem.qty + item.pickedQuantity });
       }
       updateItemQuantity(ticket.id, item.id, 0);
     } else {
       // Picking all remaining target quantity
       const qtyToAdd = item.targetQuantity - item.pickedQuantity;
-      const invItem = inventoryItems.find(i => i.sku === item.sku);
+      const invItem = inventoryItems.find(i => i.skuName === item.sku);
       
-      if (!invItem || invItem.quantity < qtyToAdd) {
+      if (!invItem || invItem.qty < qtyToAdd) {
         Alert.alert('Error', 'This item is not available or has insufficient quantity in inventory.');
         return;
       }
       
-      updateInventoryItem(invItem.id, { quantity: invItem.quantity - qtyToAdd });
+      updateInventoryItem(invItem.id, { qty: invItem.qty - qtyToAdd });
       updateItemQuantity(ticket.id, item.id, item.targetQuantity);
     }
   };
@@ -60,20 +60,20 @@ export const TicketDetailsScreen = ({ route, navigation }: any) => {
     
     if (actualDelta === 0) return;
 
-    const invItem = inventoryItems.find(i => i.sku === item.sku);
+    const invItem = inventoryItems.find(i => i.skuName === item.sku);
 
     if (actualDelta > 0) {
       // Trying to pick more
-      if (!invItem || invItem.quantity < actualDelta) {
+      if (!invItem || invItem.qty < actualDelta) {
         Alert.alert('Error', 'This item is not available or has insufficient quantity in inventory.');
         return;
       }
       // Decrement from inventory
-      updateInventoryItem(invItem.id, { quantity: invItem.quantity - actualDelta });
+      updateInventoryItem(invItem.id, { qty: invItem.qty - actualDelta });
     } else {
       // Un-picking (delta is negative), so add back to inventory
       if (invItem) {
-        updateInventoryItem(invItem.id, { quantity: invItem.quantity + Math.abs(actualDelta) });
+        updateInventoryItem(invItem.id, { qty: invItem.qty + Math.abs(actualDelta) });
       }
     }
 

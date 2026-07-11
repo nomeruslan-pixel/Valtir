@@ -61,7 +61,7 @@ export const useTicketStore = create<TicketStore>()(
           const rows = grouped[ticketNum];
           const items: PickTicketItem[] = rows.map((r: any) => {
             const keys = Object.keys(r);
-            const nameKey = keys.find(k => k.toLowerCase().includes('item') || k.toLowerCase().includes('name') || k.toLowerCase().includes('sku')) || keys[1];
+            const nameKey = keys.find(k => k.toLowerCase().includes('part') || k.toLowerCase().includes('item') || k.toLowerCase().includes('name') || k.toLowerCase().includes('sku')) || keys[1];
             const descKey = keys.find(k => k.toLowerCase().includes('desc')) || null;
             const qtyKey = keys.find(k => k.toLowerCase().includes('qty') || k.toLowerCase().includes('quantity')) || keys[2];
             
