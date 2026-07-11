@@ -91,7 +91,11 @@ export const RadarScreen = ({ route, navigation }: any) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity 
+          style={styles.closeButton} 
+          onPress={() => navigation.goBack()}
+          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+        >
           <X color={colors.foreground} size={28} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Find Item</Text>
@@ -135,6 +139,8 @@ const getStyles = (colors: any) => StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
+    zIndex: 100,
+    elevation: 100,
   },
   closeButton: {
     width: 40,

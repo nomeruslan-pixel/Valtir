@@ -130,6 +130,14 @@ export const ProfileScreen = ({ navigation }: any) => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header Section */}
         <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => navigation.navigate('Tabs', { screen: 'Home' })}
+            hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+          >
+            <ArrowLeft color={colors.foreground} size={28} />
+          </TouchableOpacity>
+          
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
           </View>
@@ -327,6 +335,16 @@ const getStyles = (colors: any) => StyleSheet.create({
     elevation: 2,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    position: 'relative',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 24,
+    left: 20,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
   },
   avatar: {
     width: 96,
