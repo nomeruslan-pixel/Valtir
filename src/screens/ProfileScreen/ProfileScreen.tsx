@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, TextInput, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell, Shield, Moon, ChevronRight, LogOut, X, UserX, Bluetooth, FileUp, ClipboardList, ArrowLeft } from 'lucide-react-native';
 import { useUserStore } from '../../features/user/store/useUserStore';
 import { useBleStore } from '../../entities/tracker/model/useBleStore';
@@ -21,6 +21,7 @@ export const ProfileScreen = ({ navigation }: any) => {
   const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [editName, setEditName] = useState(name);
   const [editEmail, setEditEmail] = useState(email);
+  const insets = useSafeAreaInsets();
 
   const handleImportInventory = async () => {
     try {
@@ -131,7 +132,7 @@ export const ProfileScreen = ({ navigation }: any) => {
         {/* Header Section */}
         <View style={styles.header}>
           <TouchableOpacity 
-            style={styles.backButton} 
+            style={[styles.backButton, { top: (insets.top || 40) + 16 }]} 
             onPress={() => navigation.navigate('Tabs', { screen: 'Home' })}
             hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
           >
@@ -339,7 +340,6 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 24,
     left: 20,
     zIndex: 10,
     width: 40,

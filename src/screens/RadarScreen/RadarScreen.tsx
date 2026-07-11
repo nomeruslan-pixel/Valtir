@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, Radar } from 'lucide-react-native';
 import { useThemeColors } from '../../theme/useThemeColors';
 import { useRadar } from '../../features/ScanBLETag/lib/useRadar';
@@ -9,6 +9,7 @@ export const RadarScreen = ({ route, navigation }: any) => {
   const { trackerId } = route.params;
   const colors = useThemeColors();
   const styles = getStyles(colors);
+  const insets = useSafeAreaInsets();
   
   const { rssi, isScanning, error, startRadar, stopRadar } = useRadar(trackerId);
   
@@ -89,8 +90,8 @@ export const RadarScreen = ({ route, navigation }: any) => {
   });
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
+    <View style={styles.safeArea}>
+      <View style={[styles.header, { marginTop: insets.top || 40 }]}>
         <TouchableOpacity 
           style={styles.closeButton} 
           onPress={() => navigation.goBack()}
@@ -124,7 +125,7 @@ export const RadarScreen = ({ route, navigation }: any) => {
           )}
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
