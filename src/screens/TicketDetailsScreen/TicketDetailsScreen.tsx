@@ -33,14 +33,19 @@ export const TicketDetailsScreen = ({ route, navigation }: any) => {
     const isPicked = item.status === 'picked' || item.pickedQuantity >= item.targetQuantity;
     
     if (isPicked) {
-      // Un-picking all: restore inventory
+      // Un-picking all
+      // DEPENDENCY TURNED OFF FOR PHASE 1: Do not update inventory
+      /*
       const invItem = inventoryItems.find(i => i.skuName === item.sku);
       if (invItem) {
         updateInventoryItem(invItem.id, { qty: invItem.qty + item.pickedQuantity });
       }
+      */
       updateItemQuantity(ticket.id, item.id, 0);
     } else {
       // Picking all remaining target quantity
+      // DEPENDENCY TURNED OFF FOR PHASE 1: Ignore inventory quantities
+      /*
       const qtyToAdd = item.targetQuantity - item.pickedQuantity;
       const invItem = inventoryItems.find(i => i.skuName === item.sku);
       
@@ -50,6 +55,7 @@ export const TicketDetailsScreen = ({ route, navigation }: any) => {
       }
       
       updateInventoryItem(invItem.id, { qty: invItem.qty - qtyToAdd });
+      */
       updateItemQuantity(ticket.id, item.id, item.targetQuantity);
     }
   };
@@ -60,6 +66,8 @@ export const TicketDetailsScreen = ({ route, navigation }: any) => {
     
     if (actualDelta === 0) return;
 
+    // DEPENDENCY TURNED OFF FOR PHASE 1: Do not update inventory or block based on it
+    /*
     const invItem = inventoryItems.find(i => i.skuName === item.sku);
 
     if (actualDelta > 0) {
@@ -76,6 +84,7 @@ export const TicketDetailsScreen = ({ route, navigation }: any) => {
         updateInventoryItem(invItem.id, { qty: invItem.qty + Math.abs(actualDelta) });
       }
     }
+    */
 
     updateItemQuantity(ticket.id, item.id, newQuantity);
   };
