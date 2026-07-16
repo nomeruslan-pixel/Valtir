@@ -78,8 +78,8 @@ export const TicketDashboardScreen = ({ navigation }: any) => {
                   <View style={styles.ticketIconContainer}>
                     <ClipboardList color={colors.foreground} size={24} />
                   </View>
-                  <View>
-                    <Text style={styles.ticketIdText}>{ticket.externalId}</Text>
+                  <View style={styles.ticketTextContainer}>
+                    <Text style={styles.ticketIdText} numberOfLines={1}>{ticket.externalId}</Text>
                     <Text style={styles.ticketMetaText}>
                       {ticket.items.length} items • {new Date(ticket.createdAt).toLocaleDateString()}
                     </Text>
@@ -193,6 +193,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   ticketLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   ticketIconContainer: {
     width: 48,
@@ -202,6 +203,10 @@ const getStyles = (colors: any) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
+  },
+  ticketTextContainer: {
+    flex: 1,
+    paddingRight: 8,
   },
   ticketIdText: {
     fontSize: 16,
