@@ -77,8 +77,19 @@ export const generateAndSharePDF = async (ticket: PickTicket) => {
 
     const { uri } = await Print.printToFileAsync({ html: htmlContent });
     
-    // Rename the file to include the ticket number
-    const newUri = FileSystem.documentDirectory + `PickTicket_${ticket.externalId}.pdf`;
+    // Rename the file to include the ticket number securely
+    const safeExternalId = ticket.externalId.replace(/[^a-zA-Z0-9-_]/g, '_');
+    const newUri = FileSystem.documentDirectory + `PickTicket_${safeExternalId}.pdf`;
+    
+    try {
+      const fileInfo = await FileSystem.getInfoAsync(newUri);
+      if (fileInfo.exists) {
+        await FileSystem.deleteAsync(newUri);
+      }
+    } catch (e) {
+      console.log('Error deleting old pdf:', e);
+    }
+
     await FileSystem.moveAsync({
       from: uri,
       to: newUri

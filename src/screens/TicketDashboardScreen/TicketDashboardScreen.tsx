@@ -79,7 +79,7 @@ export const TicketDashboardScreen = ({ navigation }: any) => {
                     <ClipboardList color={colors.foreground} size={24} />
                   </View>
                   <View>
-                    <Text style={styles.ticketIdText}>Ticket #{ticket.externalId}</Text>
+                    <Text style={styles.ticketIdText}>{ticket.externalId}</Text>
                     <Text style={styles.ticketMetaText}>
                       {ticket.items.length} items • {new Date(ticket.createdAt).toLocaleDateString()}
                     </Text>

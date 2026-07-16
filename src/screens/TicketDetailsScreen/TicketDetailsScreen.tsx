@@ -139,7 +139,7 @@ export const TicketDetailsScreen = ({ route, navigation }: any) => {
           <ArrowLeft color={colors.foreground} size={24} />
         </TouchableOpacity>
         <View>
-          <Text style={styles.headerTitle}>Ticket #{ticket.externalId}</Text>
+          <Text style={styles.headerTitle}>{ticket.externalId}</Text>
           <Text style={styles.headerSubtitle}>{ticket.items.length} items</Text>
         </View>
         <TouchableOpacity onPress={handleClearTicket} style={styles.deleteButton}>
