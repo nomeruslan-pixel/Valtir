@@ -15,7 +15,10 @@ import { TicketDetailsScreen } from '../../screens/TicketDetailsScreen/TicketDet
 import { LegalScreen } from '../../screens/LegalScreen/LegalScreen';
 import { ItemFormScreen } from '../../screens/ItemFormScreen/ItemFormScreen';
 import { RadarScreen } from '../../screens/RadarScreen/RadarScreen';
+import { AuthScreen } from '../../screens/AuthScreen/AuthScreen';
 import { useThemeColors } from '../../theme/useThemeColors';
+import { useAuthStore } from '../../features/auth/store/useAuthStore';
+import { useWebSocket } from '../../api/useWebSocket';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -129,17 +132,37 @@ function TabNavigator() {
 }
 
 export const RootNavigator = () => {
+  const { isAuthenticated, checkAuth } = useAuthStore();
+  const [isReady, setIsReady] = React.useState(false);
+  
+  // Initialize WebSocket globally when authenticated
+  useWebSocket();
+
+  React.useEffect(() => {
+    checkAuth().then(() => setIsReady(true));
+  }, []);
+
+  if (!isReady) {
+    return null; // Or a splash screen
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Tabs" component={TabNavigator} />
-        <Stack.Screen name="Scan" component={ScanScreen} options={{ presentation: 'fullScreenModal' }} />
-        <Stack.Screen name="Radar" component={RadarScreen} options={{ presentation: 'fullScreenModal' }} />
-        <Stack.Screen name="ItemForm" component={ItemFormScreen} options={{ presentation: 'modal' }} />
-        <Stack.Screen name="TicketDashboard" component={TicketDashboardScreen} />
-        <Stack.Screen name="Profile" component={ProfileScreen} />
-        <Stack.Screen name="TicketDetails" component={TicketDetailsScreen} />
-        <Stack.Screen name="Legal" component={LegalScreen} options={{ presentation: 'modal' }} />
+        {!isAuthenticated ? (
+          <Stack.Screen name="Auth" component={AuthScreen} />
+        ) : (
+          <>
+            <Stack.Screen name="Tabs" component={TabNavigator} />
+            <Stack.Screen name="Scan" component={ScanScreen} options={{ presentation: 'fullScreenModal' }} />
+            <Stack.Screen name="Radar" component={RadarScreen} options={{ presentation: 'fullScreenModal' }} />
+            <Stack.Screen name="ItemForm" component={ItemFormScreen} options={{ presentation: 'modal' }} />
+            <Stack.Screen name="TicketDashboard" component={TicketDashboardScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="TicketDetails" component={TicketDetailsScreen} />
+            <Stack.Screen name="Legal" component={LegalScreen} options={{ presentation: 'modal' }} />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

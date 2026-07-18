@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, TextInput, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Bell, Shield, Moon, ChevronRight, LogOut, X, UserX, Bluetooth, FileUp, ClipboardList, ArrowLeft } from 'lucide-react-native';
+import { Bell, Shield, Moon, ChevronRight, LogOut, X, UserX, Bluetooth, FileUp, ClipboardList, ArrowLeft, Settings, ShieldAlert } from 'lucide-react-native';
 import { useUserStore } from '../../features/user/store/useUserStore';
 import { useBleStore } from '../../entities/tracker/model/useBleStore';
 import { useThemeColors } from '../../theme/useThemeColors';
+import { useAuthStore } from '../../features/auth/store/useAuthStore';
 import * as DocumentPicker from 'expo-document-picker';
 import Papa from 'papaparse';
 import { useInventoryStore } from '../../entities/inventory/model/useInventoryStore';
@@ -12,12 +13,13 @@ import { useTicketStore } from '../../features/tickets/store/useTicketStore';
 import { pickAndParseCSV } from '../../features/tickets/utils/csvParser';
 
 export const ProfileScreen = ({ navigation }: any) => {
-  const { name, email, notificationsEnabled, darkMode, updateProfile, toggleNotifications, toggleDarkMode, logout } = useUserStore();
+  const { name, email, notificationsEnabled, darkMode, updateProfile, toggleNotifications, toggleDarkMode } = useUserStore();
   const { showAllDevices, setShowAllDevices } = useBleStore();
   const importInventoryCSV = useInventoryStore(state => state.importCSV);
   const addTicketsFromCSV = useTicketStore(state => state.addTicketsFromCSV);
   const colors = useThemeColors();
   const styles = getStyles(colors);
+  const { logout } = useAuthStore();
   const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [editName, setEditName] = useState(name);
   const [editEmail, setEditEmail] = useState(email);
@@ -90,24 +92,6 @@ export const ProfileScreen = ({ navigation }: any) => {
     setEditModalVisible(false);
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      "Log Out",
-      "Are you sure you want to log out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Log Out", 
-          style: "destructive",
-          onPress: () => {
-            logout();
-            Alert.alert("Logged out", "You have been logged out successfully.");
-          }
-        }
-      ]
-    );
-  };
-
   const handleDeleteAccount = () => {
     Alert.alert(
       "Delete Account",
@@ -118,7 +102,7 @@ export const ProfileScreen = ({ navigation }: any) => {
           text: "Delete", 
           style: "destructive",
           onPress: () => {
-            logout(); // Resets user state
+            logout(); 
             Alert.alert("Account Deleted", "Your account has been permanently deleted.");
           }
         }
@@ -180,7 +164,7 @@ export const ProfileScreen = ({ navigation }: any) => {
               {/* Privacy */}
               <TouchableOpacity style={[styles.row, styles.borderBottom]} onPress={() => navigation.navigate('Legal')}>
                 <View style={styles.rowLeft}>
-                  <Shield color={colors.mutedForeground} size={20} />
+                  <ShieldAlert color={colors.mutedForeground} size={20} />
                   <Text style={styles.rowText}>Privacy & Terms</Text>
                 </View>
                 <ChevronRight color={colors.border} size={20} />
@@ -246,16 +230,10 @@ export const ProfileScreen = ({ navigation }: any) => {
             </View>
           </View>
 
-          {/* Other Section */}
+          {/* Danger Zone */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>OTHER</Text>
+            <Text style={styles.sectionTitle}>DANGER ZONE</Text>
             <View style={styles.card}>
-              <TouchableOpacity style={[styles.row, styles.borderBottom]} onPress={handleLogout}>
-                <View style={styles.rowLeft}>
-                  <LogOut color={colors.destructive} size={20} />
-                  <Text style={[styles.rowText, { color: colors.destructive }]}>Log out</Text>
-                </View>
-              </TouchableOpacity>
               <TouchableOpacity style={styles.row} onPress={handleDeleteAccount}>
                 <View style={styles.rowLeft}>
                   <UserX color={colors.destructive} size={20} />
@@ -265,8 +243,15 @@ export const ProfileScreen = ({ navigation }: any) => {
             </View>
           </View>
 
+          <TouchableOpacity 
+            style={[styles.logoutButton, { borderColor: colors.destructive }]} 
+            onPress={logout}
+          >
+            <LogOut color={colors.destructive} size={20} style={{ marginRight: 8 }} />
+            <Text style={[styles.logoutButtonText, { color: colors.destructive }]}>Log Out</Text>
+          </TouchableOpacity>
         </View>
-        <View style={{ height: 120 }} />
+        <View style={{ height: 40 }} />
       </ScrollView>
 
       {/* Edit Profile Modal */}
@@ -350,7 +335,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: 'rgba(246, 159, 60, 0.2)', // primary/20
+    backgroundColor: 'rgba(246, 159, 60, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
