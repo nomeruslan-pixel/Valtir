@@ -80,7 +80,7 @@ export const HomeScreen = ({ navigation }: any) => {
         <View style={styles.recentSection}>
           <View style={styles.recentHeader}>
             <Text style={styles.sectionTitle}>Recent Items</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Inventory')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Items')}>
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>
           </View>

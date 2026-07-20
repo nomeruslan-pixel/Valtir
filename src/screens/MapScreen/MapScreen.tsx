@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Dimensions, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Dimensions, Alert, Linking, Modal, FlatList } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
-import { Search, Navigation, Bell, Target } from 'lucide-react-native';
+import { Search, Navigation, Bell, Target, Layers, X } from 'lucide-react-native';
 import { useThemeColors } from '../../theme/useThemeColors';
 import { api } from '../../api/client';
 
@@ -23,6 +23,7 @@ export const MapScreen = ({ route }: any) => {
   const webViewRef = useRef<WebView>(null);
   const [currentLoc, setCurrentLoc] = useState(defaultRegion);
   const [zones, setZones] = useState<any[]>([]);
+  const [isZonesModalVisible, setIsZonesModalVisible] = useState(false);
 
   const items = useInventoryStore((state) => state.items);
 
@@ -144,6 +145,7 @@ export const MapScreen = ({ route }: any) => {
   };
 
   const updateWebViewPins = (lat: number, lng: number, pinsToRender: any[], zonesToRender: any[] = zones) => {
+    console.log(`Sending to WebView: ${pinsToRender.length} pins, ${zonesToRender.length} zones`);
     if (webViewRef.current) {
       const data = { type: 'SET_LOCATION', lat, lng, pins: pinsToRender, zones: zonesToRender };
       webViewRef.current.injectJavaScript(`
@@ -183,7 +185,9 @@ export const MapScreen = ({ route }: any) => {
   const handleMessage = (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
-      if (data.type === 'PIN_CLICK') {
+      if (data.type === 'LOG') {
+        console.log('WebView LOG:', data.message);
+      } else if (data.type === 'PIN_CLICK') {
         const pin = pins.find(p => p.id === data.id);
         if (pin) setSelectedPin(pin);
       } else if (data.type === 'MAP_READY') {
@@ -253,6 +257,10 @@ export const MapScreen = ({ route }: any) => {
             var userLat = ${defaultRegion.latitude};
             var userLng = ${defaultRegion.longitude};
 
+            console.log = function(msg) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'LOG', message: String(msg) }));
+            };
+
             window.addEventListener('message', function(event) {
                 var data = event.data;
                 if (!data || !data.type) return;
@@ -291,13 +299,16 @@ export const MapScreen = ({ route }: any) => {
                         });
                     }
                     
-                    if(data.zones) {
+                    if(data.zones && data.zones.length > 0) {
                         zoneLayers.forEach(function(layer) { map.removeLayer(layer); });
                         zoneLayers = [];
+                        var bounds = L.latLngBounds([]);
+                        var boundsValid = false;
+
                         data.zones.forEach(function(zone) {
                             if (zone.coordinates_json) {
                                 try {
-                                    var geom = JSON.parse(zone.coordinates_json);
+                                    var geom = typeof zone.coordinates_json === 'string' ? JSON.parse(zone.coordinates_json) : zone.coordinates_json;
                                     if (geom.type === 'Polygon') {
                                         var coords = geom.coordinates[0].map(function(c) { return [c[1], c[0]]; });
                                         var polygon = L.polygon(coords, {
@@ -314,10 +325,18 @@ export const MapScreen = ({ route }: any) => {
                                         });
                                         
                                         zoneLayers.push(polygon);
+                                        bounds.extend(polygon.getBounds());
+                                        boundsValid = true;
                                     }
-                                } catch(e) {}
+                                } catch(e) { console.log('Error parsing zone:', e); }
                             }
                         });
+
+                        // Only auto-fit if this is the initial load or a specific command (preventing user drag override)
+                        if (boundsValid && !window.hasFittedBounds) {
+                            map.fitBounds(bounds, { padding: [50, 50] });
+                            window.hasFittedBounds = true;
+                        }
                     }
                 } else if (data.type === 'UPDATE_USER_LOCATION') {
                     userLat = data.lat;
@@ -396,7 +415,70 @@ export const MapScreen = ({ route }: any) => {
         <TouchableOpacity style={styles.locateButton} onPress={handleCenterOnUser}>
           <Target color={colors.foreground} size={24} />
         </TouchableOpacity>
+        <TouchableOpacity style={[styles.locateButton, { marginTop: 12 }]} onPress={() => setIsZonesModalVisible(true)}>
+          <Layers color={colors.foreground} size={24} />
+        </TouchableOpacity>
       </View>
+
+      {/* Zones List Modal */}
+      <Modal
+        visible={isZonesModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsZonesModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Warehouse Zones</Text>
+              <TouchableOpacity onPress={() => setIsZonesModalVisible(false)}>
+                <X color={colors.foreground} size={24} />
+              </TouchableOpacity>
+            </View>
+            {zones.length === 0 ? (
+              <Text style={{ color: colors.mutedForeground, textAlign: 'center', marginTop: 20 }}>No zones found</Text>
+            ) : (
+              <FlatList
+                data={zones}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => {
+                  let centerLat = currentLoc.latitude;
+                  let centerLng = currentLoc.longitude;
+                  try {
+                    const geom = typeof item.coordinates_json === 'string' ? JSON.parse(item.coordinates_json) : item.coordinates_json;
+                    if (geom && geom.coordinates && geom.coordinates[0] && geom.coordinates[0].length > 0) {
+                      centerLng = geom.coordinates[0][0][0];
+                      centerLat = geom.coordinates[0][0][1];
+                    }
+                  } catch (e) {}
+
+                  return (
+                    <TouchableOpacity 
+                      style={styles.zoneListItem} 
+                      onPress={() => {
+                        setIsZonesModalVisible(false);
+                        if (webViewRef.current) {
+                          const data = { type: 'CENTER_MAP', lat: centerLat, lng: centerLng };
+                          webViewRef.current.injectJavaScript(`
+                            window.postMessage(${JSON.stringify(data)}, '*');
+                            true;
+                          `);
+                        }
+                      }}
+                    >
+                      <View style={styles.zoneListLeft}>
+                        <View style={[styles.zoneColorBadge, { backgroundColor: item.color }]} />
+                        <Text style={styles.zoneListName}>{item.name}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                }}
+                contentContainerStyle={{ paddingBottom: 20 }}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
 
       {/* Bottom Info Card */}
       {selectedPin && (
@@ -563,5 +645,52 @@ const getStyles = (colors: any) => StyleSheet.create({
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: colors.background,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: '60%',
+    minHeight: '40%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.foreground,
+  },
+  zoneListItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  zoneListLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  zoneColorBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    marginRight: 16,
+  },
+  zoneListName: {
+    fontSize: 16,
+    color: colors.foreground,
+    fontWeight: '500',
   },
 });
