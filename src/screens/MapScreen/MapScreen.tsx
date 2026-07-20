@@ -4,6 +4,7 @@ import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import { Search, Navigation, Bell, Target } from 'lucide-react-native';
 import { useThemeColors } from '../../theme/useThemeColors';
+import { api } from '../../api/client';
 
 const { width, height } = Dimensions.get('window');
 
@@ -21,6 +22,7 @@ export const MapScreen = ({ route }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const webViewRef = useRef<WebView>(null);
   const [currentLoc, setCurrentLoc] = useState(defaultRegion);
+  const [zones, setZones] = useState<any[]>([]);
 
   const items = useInventoryStore((state) => state.items);
 
@@ -63,6 +65,20 @@ export const MapScreen = ({ route }: any) => {
     };
   }, []);
 
+  useEffect(() => {
+    fetchZones();
+  }, []);
+
+  const fetchZones = async () => {
+    try {
+      const res = await api.get('/api/zones/');
+      setZones(res.data);
+      updateWebViewPins(currentLoc.latitude, currentLoc.longitude, pins, res.data);
+    } catch(err) {
+      console.log('Failed to fetch zones', err);
+    }
+  };
+
   // Handle route params for focusing map
   useEffect(() => {
     if (route?.params?.focusLat && route?.params?.focusLng) {
@@ -86,7 +102,7 @@ export const MapScreen = ({ route }: any) => {
   // Sync items when they change
   useEffect(() => {
     updatePins(currentLoc.latitude, currentLoc.longitude);
-  }, [items]);
+  }, [items, zones]);
 
   const updateWebViewLocation = (lat: number, lng: number) => {
     if (webViewRef.current) {
@@ -124,12 +140,12 @@ export const MapScreen = ({ route }: any) => {
       }));
 
     setPins(generatedPins);
-    updateWebViewPins(lat, lng, generatedPins);
+    updateWebViewPins(lat, lng, generatedPins, zones);
   };
 
-  const updateWebViewPins = (lat: number, lng: number, pinsToRender: any[]) => {
+  const updateWebViewPins = (lat: number, lng: number, pinsToRender: any[], zonesToRender: any[] = zones) => {
     if (webViewRef.current) {
-      const data = { type: 'SET_LOCATION', lat, lng, pins: pinsToRender };
+      const data = { type: 'SET_LOCATION', lat, lng, pins: pinsToRender, zones: zonesToRender };
       webViewRef.current.injectJavaScript(`
         window.postMessage(${JSON.stringify(data)}, '*');
         true;
@@ -140,7 +156,7 @@ export const MapScreen = ({ route }: any) => {
   const handleSearch = (text: string) => {
     setSearchQuery(text);
     const filteredPins = pins.filter(p => p.title.toLowerCase().includes(text.toLowerCase()));
-    updateWebViewPins(currentLoc.latitude, currentLoc.longitude, filteredPins);
+    updateWebViewPins(currentLoc.latitude, currentLoc.longitude, filteredPins, zones);
     if (filteredPins.length > 0) setSelectedPin(filteredPins[0]);
     else setSelectedPin(null);
   };
@@ -170,8 +186,8 @@ export const MapScreen = ({ route }: any) => {
       if (data.type === 'PIN_CLICK') {
         const pin = pins.find(p => p.id === data.id);
         if (pin) setSelectedPin(pin);
-      } else if (data.type === 'MAP_READY' && pins.length > 0) {
-        updateWebViewPins(currentLoc.latitude, currentLoc.longitude, pins);
+      } else if (data.type === 'MAP_READY') {
+        updateWebViewPins(currentLoc.latitude, currentLoc.longitude, pins, zones);
       }
     } catch(e) {}
   };
@@ -208,6 +224,18 @@ export const MapScreen = ({ route }: any) => {
                 border: 3px solid white;
                 animation: pulse 2s infinite;
             }
+            .zone-tooltip {
+                background: transparent;
+                border: none;
+                box-shadow: none;
+                color: white;
+                font-weight: bold;
+                text-shadow: 1px 1px 2px #000;
+                font-size: 14px;
+            }
+            .zone-tooltip::before {
+                display: none;
+            }
         </style>
     </head>
     <body>
@@ -220,6 +248,7 @@ export const MapScreen = ({ route }: any) => {
             }).addTo(map);
 
             var markers = {};
+            var zoneLayers = [];
             var routingControl = null;
             var userLat = ${defaultRegion.latitude};
             var userLng = ${defaultRegion.longitude};
@@ -259,6 +288,35 @@ export const MapScreen = ({ route }: any) => {
                                 window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'PIN_CLICK', id: pin.id }));
                             });
                             markers[pin.id] = marker;
+                        });
+                    }
+                    
+                    if(data.zones) {
+                        zoneLayers.forEach(function(layer) { map.removeLayer(layer); });
+                        zoneLayers = [];
+                        data.zones.forEach(function(zone) {
+                            if (zone.coordinates_json) {
+                                try {
+                                    var geom = JSON.parse(zone.coordinates_json);
+                                    if (geom.type === 'Polygon') {
+                                        var coords = geom.coordinates[0].map(function(c) { return [c[1], c[0]]; });
+                                        var polygon = L.polygon(coords, {
+                                            color: zone.color,
+                                            fillColor: zone.color,
+                                            fillOpacity: 0.3,
+                                            weight: 3
+                                        }).addTo(map);
+                                        
+                                        polygon.bindTooltip(zone.name, {
+                                            permanent: true,
+                                            direction: 'center',
+                                            className: 'zone-tooltip'
+                                        });
+                                        
+                                        zoneLayers.push(polygon);
+                                    }
+                                } catch(e) {}
+                            }
                         });
                     }
                 } else if (data.type === 'UPDATE_USER_LOCATION') {
