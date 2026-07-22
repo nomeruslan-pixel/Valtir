@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Key, Briefcase, Wallet, ChevronRight, ClipboardList, Plus, FileUp, Package, MapPin, Radar } from 'lucide-react-native';
 import { useThemeColors } from '../../theme/useThemeColors';
@@ -11,7 +11,15 @@ export const InventoryScreen = ({ navigation }: any) => {
   const [activeFilter, setActiveFilter] = useState('All Items');
   
   const items = useInventoryStore(state => state.items);
+  const fetchInventory = useInventoryStore(state => state.fetchInventory);
+  const [refreshing, setRefreshing] = useState(false);
   const filters = ['All Items', 'Tracked', 'Untracked'];
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await fetchInventory();
+    setRefreshing(false);
+  }, [fetchInventory]);
 
   const filteredItems = items.filter(item => {
     if (activeFilter === 'Tracked') return !!item.linkedTrackerId;
@@ -47,7 +55,13 @@ export const InventoryScreen = ({ navigation }: any) => {
         </ScrollView>
       </View>
 
-      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollContainer} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
+      >
         <View style={styles.listContainer}>
           {filteredItems.map((item) => {
             const isTracked = !!item.linkedTrackerId;
