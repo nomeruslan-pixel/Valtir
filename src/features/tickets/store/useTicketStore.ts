@@ -72,9 +72,18 @@ export const useTicketStore = create<TicketStore>((set, get) => ({
   },
       
   addTicketsFromCSV: async (csvData: any[]) => {
+    const getVal = (row: any, searchKeys: string[]) => {
+      const keys = Object.keys(row);
+      const matchingKey = keys.find(k => {
+        const clean = k.trim().replace(/^[\uFEFF\xA0]+|[\uFEFF\xA0]+$/g, '').toLowerCase();
+        return searchKeys.some(sk => clean === sk.toLowerCase());
+      });
+      return matchingKey ? row[matchingKey] : undefined;
+    };
+
     const grouped = csvData.reduce((acc: any, row: any) => {
-      // Exact matching for Load Number
-      const loadNumber = row['Load Number'];
+      // Robust matching for Load Number
+      const loadNumber = getVal(row, ['Load Number']);
       const tId = loadNumber ? loadNumber.toString().trim() : 'UNKNOWN';
 
       if (!tId || tId === 'UNKNOWN') return acc;
@@ -87,11 +96,11 @@ export const useTicketStore = create<TicketStore>((set, get) => ({
       if (ticketNum === 'UNKNOWN') return null;
       const rows = grouped[ticketNum];
       const items = rows.map((r: any) => {
-        // Exact matching
-        const itemValue = r['Item'];
-        const descValue = r['Description'] || '';
-        const qtyValue = r['Qty'] || r['Quantity'] || '1';
-        const typeValue = r['Type'] || null;
+        // Robust matching
+        const itemValue = getVal(r, ['Item']);
+        const descValue = getVal(r, ['Description']) || '';
+        const qtyValue = getVal(r, ['Qty', 'Quantity']) || '1';
+        const typeValue = getVal(r, ['Type']) || null;
         
         return {
           name: itemValue ? itemValue.toString().trim() : 'Unknown Item',

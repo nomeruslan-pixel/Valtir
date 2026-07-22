@@ -42,13 +42,24 @@ export const ProfileScreen = ({ navigation }: any) => {
         skipEmptyLines: true,
         complete: (results) => {
           const data = results.data as any[];
+          
+          const getVal = (row: any, searchKeys: string[]) => {
+            const keys = Object.keys(row);
+            const matchingKey = keys.find(k => {
+              const clean = k.trim().replace(/^[\uFEFF\xA0]+|[\uFEFF\xA0]+$/g, '').toLowerCase();
+              return searchKeys.some(sk => clean === sk.toLowerCase());
+            });
+            return matchingKey ? row[matchingKey] : undefined;
+          };
+
           const parsedData = data.map(row => {
-            // Exact matching for inventory
-            const partNumber = row['Part Number'];
-            const sku = row['SKU'];
-            const description = row['Description'] || '';
-            const type = row['Type'] || null;
-            const qty = parseInt(row['Quantity']) || parseInt(row['Qty']) || 1;
+            // Robust matching for inventory
+            const partNumber = getVal(row, ['Part Number']);
+            const sku = getVal(row, ['SKU']);
+            const description = getVal(row, ['Description']) || '';
+            const type = getVal(row, ['Type']) || null;
+            const qtyStr = getVal(row, ['Quantity', 'Qty']);
+            const qty = parseInt(qtyStr) || 1;
             
             const finalSkuName = sku || partNumber;
             
