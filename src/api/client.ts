@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // For Android Emulator, use http://10.0.2.2:8000
 // For iOS Simulator, use http://localhost:8000
 // For physical device, use your machine's local IP or ngrok
-export const API_BASE_URL = 'https://salt-dropkick-cod.ngrok-free.dev'; // Ngrok tunnel
+export const API_BASE_URL = 'https://immorally-mourner-knelt.ngrok-free.dev'; // Ngrok tunnel
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
