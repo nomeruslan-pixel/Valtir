@@ -43,20 +43,28 @@ export const ProfileScreen = ({ navigation }: any) => {
         complete: (results) => {
           const data = results.data as any[];
           const parsedData = data.map(row => {
-            const keys = Object.keys(row);
-            const nameKey = keys.find(k => k.toLowerCase().includes('name') || k.toLowerCase().includes('sku') || k.toLowerCase().includes('part')) || keys[0];
-            const descKey = keys.find(k => k.toLowerCase().includes('desc')) || null;
-            const qtyKey = keys.find(k => k.toLowerCase().includes('qty') || k.toLowerCase().includes('quantity')) || keys[1];
+            // Exact matching for inventory
+            const partNumber = row['Part Number'];
+            const sku = row['SKU'];
+            const description = row['Description'] || '';
+            const type = row['Type'] || null;
+            const qty = parseInt(row['Quantity']) || parseInt(row['Qty']) || 1;
+            
+            const finalSkuName = sku || partNumber;
             
             return {
-              skuName: row[nameKey],
-              description: descKey ? row[descKey] : undefined,
-              qty: parseInt(row[qtyKey], 10) || 0,
+              skuName: finalSkuName,
+              description: description,
+              qty: qty,
+              type: type, // Adding type
             };
-          });
+          }).filter(item => !!item.skuName);
 
-          importInventoryCSV(parsedData);
-          Alert.alert('Success', `Imported ${parsedData.length} items from CSV.`);
+          importInventoryCSV(parsedData).then(() => {
+            Alert.alert('Success', `Imported ${parsedData.length} items from CSV.`);
+          }).catch((err) => {
+            Alert.alert('Error', `Failed to import: ${err.message}`);
+          });
         },
         error: (error: any) => {
           Alert.alert('Error', `Failed to parse CSV: ${error.message}`);
@@ -75,8 +83,11 @@ export const ProfileScreen = ({ navigation }: any) => {
           Alert.alert('Error', 'The CSV file is empty or could not be parsed properly.');
           return;
         }
-        addTicketsFromCSV(data);
-        Alert.alert('Success', `Imported ${data.length} tickets from CSV.`);
+        addTicketsFromCSV(data).then(() => {
+          Alert.alert('Success', `Imported pick tickets from CSV.`);
+        }).catch((err) => {
+          Alert.alert('Error', `Failed to import tickets: ${err.message}`);
+        });
       }
     } catch (error) {
       Alert.alert('Error', 'An unexpected error occurred during import.');

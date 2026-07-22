@@ -151,8 +151,20 @@ export const TicketDetailsScreen = ({ route, navigation }: any) => {
         {ticket.items.map((item) => {
           const isPicked = item.status === 'picked' || item.pickedQuantity >= item.targetQuantity;
           
+          let dynamicStyle: any = {};
+          if (!isPicked && item.type) {
+            const t = item.type.toLowerCase();
+            if (t.includes('fabricated')) {
+              dynamicStyle = { backgroundColor: '#F3F4F6', borderColor: '#D1D5DB' }; // Grey
+            } else if (t.includes('raw')) {
+              dynamicStyle = { backgroundColor: '#FFF7ED', borderColor: '#FB923C' }; // Orange
+            } else if (t.includes('purchased')) {
+              dynamicStyle = { backgroundColor: '#FEF9C3', borderColor: '#FDE047' }; // Yellow
+            }
+          }
+          
           return (
-            <View key={item.id} style={[styles.itemCard, isPicked && styles.itemCardPicked]}>
+            <View key={item.id} style={[styles.itemCard, dynamicStyle, isPicked && styles.itemCardPicked]}>
               <View style={styles.itemMainRow}>
                 <TouchableOpacity 
                   style={[styles.checkbox, isPicked && styles.checkboxPicked]}

@@ -14,6 +14,7 @@ export interface PickTicketItem {
   targetQuantity: number;
   pickedQuantity: number;
   status: ItemStatus;
+  type?: string | null;
 }
 
 export interface PickTicket {
@@ -59,7 +60,8 @@ export const useTicketStore = create<TicketStore>((set, get) => ({
           sku: i.sku,
           targetQuantity: i.target_quantity,
           pickedQuantity: i.picked_quantity,
-          status: i.status
+          status: i.status,
+          type: i.type
         })),
         photos: [] // Backend doesn't store photos yet
       }));
@@ -71,11 +73,11 @@ export const useTicketStore = create<TicketStore>((set, get) => ({
       
   addTicketsFromCSV: async (csvData: any[]) => {
     const grouped = csvData.reduce((acc: any, row: any) => {
-      const keys = Object.keys(row);
-      const tIdKey = keys.find(k => k.toLowerCase().includes('ticket')) || keys[0];
-      const tId = row[tIdKey] ? row[tIdKey].toString().trim() : 'UNKNOWN';
+      // Exact matching for Load Number
+      const loadNumber = row['Load Number'];
+      const tId = loadNumber ? loadNumber.toString().trim() : 'UNKNOWN';
 
-      if (!tId) return acc;
+      if (!tId || tId === 'UNKNOWN') return acc;
       if (!acc[tId]) acc[tId] = [];
       acc[tId].push(row);
       return acc;
@@ -85,18 +87,20 @@ export const useTicketStore = create<TicketStore>((set, get) => ({
       if (ticketNum === 'UNKNOWN') return null;
       const rows = grouped[ticketNum];
       const items = rows.map((r: any) => {
-        const keys = Object.keys(r);
-        const nameKey = keys.find(k => k.toLowerCase().includes('part') || k.toLowerCase().includes('item') || k.toLowerCase().includes('name') || k.toLowerCase().includes('sku')) || keys[1];
-        const descKey = keys.find(k => k.toLowerCase().includes('desc')) || null;
-        const qtyKey = keys.find(k => k.toLowerCase().includes('qty') || k.toLowerCase().includes('quantity')) || keys[2];
+        // Exact matching
+        const itemValue = r['Item'];
+        const descValue = r['Description'] || '';
+        const qtyValue = r['Qty'] || r['Quantity'] || '1';
+        const typeValue = r['Type'] || null;
         
         return {
-          name: r[nameKey] ? r[nameKey].toString().trim() : 'Unknown Item',
-          description: descKey && r[descKey] ? r[descKey].toString().trim() : '',
-          sku: r[nameKey] ? r[nameKey].toString().trim() : '',
-          target_quantity: parseInt(r[qtyKey], 10) || 1,
+          name: itemValue ? itemValue.toString().trim() : 'Unknown Item',
+          description: descValue.toString().trim(),
+          sku: itemValue ? itemValue.toString().trim() : '',
+          target_quantity: parseInt(qtyValue, 10) || 1,
           picked_quantity: 0,
           status: 'pending',
+          type: typeValue
         };
       });
 
@@ -107,13 +111,14 @@ export const useTicketStore = create<TicketStore>((set, get) => ({
       };
     }).filter(Boolean);
 
-    for (const ticketPayload of newTickets) {
-      try {
-        await api.post('/api/tickets/', ticketPayload);
-      } catch (error) {
-        console.error('Failed to upload ticket to API:', error);
+    try {
+      if (newTickets.length > 0) {
+        await api.post('/api/tickets/bulk', newTickets);
       }
+    } catch (error) {
+      console.error('Failed to upload tickets to API:', error);
     }
+    
     // Refresh tickets from backend
     await get().fetchTickets();
   },

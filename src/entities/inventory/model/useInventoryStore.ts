@@ -24,7 +24,7 @@ interface InventoryState {
   addItem: (item: Omit<InventoryItem, 'id' | 'lastUpdated'>) => Promise<void>;
   updateItem: (id: string, updates: Partial<Omit<InventoryItem, 'id'>>) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
-  importCSV: (parsedData: { skuName: string; description?: string; qty: number }[]) => Promise<void>;
+  importCSV: (parsedData: { skuName: string; description?: string; qty: number; type?: string | null }[]) => Promise<void>;
 }
 
 export const useInventoryStore = create<InventoryState>((set, get) => ({
@@ -99,19 +99,21 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
   },
 
   importCSV: async (parsedData) => {
-    for (const row of parsedData) {
-      if (!row.skuName) continue;
-      
-      try {
-        const payload = {
+    try {
+      const payloadItems = parsedData
+        .filter(row => row.skuName)
+        .map(row => ({
           sku_name: row.skuName.trim(),
           description: row.description?.trim(),
-          qty: row.qty
-        };
-        await api.post('/api/inventory/', payload);
-      } catch (error) {
-        console.error('Failed to import row to API:', error);
+          qty: row.qty,
+          type: row.type
+        }));
+
+      if (payloadItems.length > 0) {
+        await api.post('/api/inventory/bulk', payloadItems);
       }
+    } catch (error) {
+      console.error('Failed to import rows to API:', error);
     }
     await get().fetchInventory();
   },
