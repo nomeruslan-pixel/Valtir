@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScanLine, Package, MapPinOff, Key, BellRing, Database } from 'lucide-react-native';
 import { useThemeColors } from '../../theme/useThemeColors';
 import { useInventoryStore } from '../../entities/inventory/model/useInventoryStore';
+import * as Application from 'expo-application';
 
 export const HomeScreen = ({ navigation }: any) => {
   const colors = useThemeColors();
@@ -18,6 +19,9 @@ export const HomeScreen = ({ navigation }: any) => {
   const recentItems = [...items].sort((a, b) => 
     new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
   ).slice(0, 2);
+
+  const buildVersion = Application.nativeBuildVersion || 'Unknown';
+  const appVersion = Application.nativeApplicationVersion || '1.0.0';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -114,7 +118,7 @@ export const HomeScreen = ({ navigation }: any) => {
         {/* Version Indicator */}
         <View style={{ alignItems: 'center', marginBottom: 20 }}>
           <Text style={{ color: colors.mutedForeground, fontSize: 12, fontWeight: 'bold' }}>
-            v1.0.0 (Build 35) - Bulk Imports & Fixes
+            v{appVersion} (Build {buildVersion}) - Bulk Imports & Fixes
           </Text>
         </View>
 
