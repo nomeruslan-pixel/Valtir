@@ -114,7 +114,7 @@ export const HomeScreen = ({ navigation }: any) => {
         {/* Version Indicator */}
         <View style={{ alignItems: 'center', marginBottom: 20 }}>
           <Text style={{ color: colors.mutedForeground, fontSize: 12, fontWeight: 'bold' }}>
-            v1.0.0 (Build 28) - Bulk Imports & Fixes
+            v1.0.0 (Build 35) - Bulk Imports & Fixes
           </Text>
         </View>
 
