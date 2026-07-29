@@ -139,7 +139,9 @@ export const RootNavigator = () => {
   useWebSocket();
 
   React.useEffect(() => {
-    checkAuth().then(() => setIsReady(true));
+    checkAuth()
+      .catch(console.error)
+      .finally(() => setIsReady(true));
   }, []);
 
   if (!isReady) {
