@@ -139,9 +139,29 @@ export const RootNavigator = () => {
   useWebSocket();
 
   React.useEffect(() => {
+    let isMounted = true;
+    
+    // Fallback: if checkAuth hangs (e.g. AsyncStorage issue on iOS), force ready after 1 second
+    const timeout = setTimeout(() => {
+      if (isMounted) {
+        console.warn('checkAuth timed out, forcing isReady to true');
+        setIsReady(true);
+      }
+    }, 1000);
+
     checkAuth()
       .catch(console.error)
-      .finally(() => setIsReady(true));
+      .finally(() => {
+        if (isMounted) {
+          clearTimeout(timeout);
+          setIsReady(true);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeout);
+    };
   }, []);
 
   if (!isReady) {
