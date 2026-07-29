@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScanLine, Package, MapPinOff, Key, BellRing, Database } from 'lucide-react-native';
 import { useThemeColors } from '../../theme/useThemeColors';
 import { useInventoryStore } from '../../entities/inventory/model/useInventoryStore';
-import * as Application from 'expo-application';
 
 export const HomeScreen = ({ navigation }: any) => {
   const colors = useThemeColors();
@@ -20,8 +19,9 @@ export const HomeScreen = ({ navigation }: any) => {
     new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
   ).slice(0, 2);
 
-  const buildVersion = Application.nativeBuildVersion || 'Unknown';
-  const appVersion = Application.nativeApplicationVersion || '1.0.0';
+  // Removed expo-application to fix iOS crash
+  const buildVersion = '43';
+  const appVersion = '1.0.0';
 
   return (
     <SafeAreaView style={styles.safeArea}>
