@@ -14,7 +14,13 @@
         "NSLocationWhenInUseUsageDescription": "Valtir needs location access to map scanned assets.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Valtir needs location access to map scanned assets in background.",
         "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true
+          "NSAllowsArbitraryLoads": true,
+          "NSExceptionDomains": {
+            "20.80.96.227": {
+              "NSExceptionAllowsInsecureHTTPLoads": true,
+              "NSIncludesSubdomains": true
+            }
+          }
         }
       }
     },
