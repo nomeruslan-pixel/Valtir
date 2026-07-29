@@ -12,7 +12,10 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "Valtir needs location access to map scanned assets.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Valtir needs location access to map scanned assets in background."
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Valtir needs location access to map scanned assets in background.",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
       }
     },
     "android": {
@@ -50,7 +53,8 @@
         "expo-build-properties",
         {
           "android": {
-            "minSdkVersion": 24
+            "minSdkVersion": 24,
+            "usesCleartextTraffic": true
           }
         }
       ]
