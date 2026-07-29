@@ -4,6 +4,7 @@ import * as NavigationBar from 'expo-navigation-bar';
 import { QueryProvider } from './src/app/providers/QueryProvider';
 import { RootNavigator } from './src/app/navigation/RootNavigator';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
 
 export default function App() {
   useEffect(() => {
@@ -14,10 +15,12 @@ export default function App() {
   }, []);
 
   return (
-    <SafeAreaProvider>
-      <QueryProvider>
-        <RootNavigator />
-      </QueryProvider>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <QueryProvider>
+          <RootNavigator />
+        </QueryProvider>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }
