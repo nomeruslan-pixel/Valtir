@@ -151,10 +151,14 @@ export const TicketDetailsScreen = ({ route, navigation }: any) => {
       <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.listContainer}>
         {ticket.items.map((item) => {
           const isPicked = item.status === 'picked' || item.pickedQuantity >= item.targetQuantity;
-          
           let dynamicStyle: any = {};
-          if (!isPicked && item.type) {
-            const t = item.type.toLowerCase();
+          
+          // Lookup inventory item to get the type if it's missing on the ticket item
+          const invItem = inventoryItems.find(i => i.skuName === item.sku || i.skuName === item.name);
+          const itemType = item.type || invItem?.type;
+
+          if (!isPicked && itemType) {
+            const t = itemType.toLowerCase();
             if (t.includes('fabricated')) {
               dynamicStyle = { backgroundColor: '#FEF9C3', borderColor: '#FDE047' }; // Yellow
             } else if (t.includes('raw')) {
