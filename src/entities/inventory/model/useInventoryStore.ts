@@ -16,6 +16,8 @@ export type InventoryItem = {
   linkedTrackerId: string | null;
   lastLocation: LocationCoords | null;
   lastUpdated: string;
+  type?: string | null;
+  yard?: string;
 };
 
 interface InventoryState {
@@ -24,7 +26,8 @@ interface InventoryState {
   addItem: (item: Omit<InventoryItem, 'id' | 'lastUpdated'>) => Promise<void>;
   updateItem: (id: string, updates: Partial<Omit<InventoryItem, 'id'>>) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
-  importCSV: (parsedData: { skuName: string; description?: string; qty: number; type?: string | null }[]) => Promise<void>;
+  deleteItems: (ids: string[]) => Promise<void>;
+  importCSV: (parsedData: { skuName: string; description?: string; qty: number; type?: string | null; yard?: string }[]) => Promise<void>;
 }
 
 export const useInventoryStore = create<InventoryState>((set, get) => ({
@@ -42,7 +45,9 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         lastLocation: i.last_location_lat && i.last_location_lng 
           ? { lat: i.last_location_lat, lng: i.last_location_lng } 
           : null,
-        lastUpdated: i.last_updated
+        lastUpdated: i.last_updated,
+        type: i.type || null,
+        yard: i.custom_fields?.yard || ''
       }));
       set({ items: backendItems });
     } catch (error) {
@@ -58,7 +63,9 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         qty: itemData.qty,
         linked_tracker_id: itemData.linkedTrackerId,
         last_location_lat: itemData.lastLocation?.lat,
-        last_location_lng: itemData.lastLocation?.lng
+        last_location_lng: itemData.lastLocation?.lng,
+        type: itemData.type || null,
+        custom_fields: { yard: itemData.yard || '' }
       };
       await api.post('/api/inventory/', payload);
       await get().fetchInventory();
@@ -79,7 +86,9 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         qty: updates.qty !== undefined ? updates.qty : currentItem.qty,
         linked_tracker_id: updates.linkedTrackerId !== undefined ? updates.linkedTrackerId : currentItem.linkedTrackerId,
         last_location_lat: updates.lastLocation?.lat !== undefined ? updates.lastLocation?.lat : currentItem.lastLocation?.lat,
-        last_location_lng: updates.lastLocation?.lng !== undefined ? updates.lastLocation?.lng : currentItem.lastLocation?.lng
+        last_location_lng: updates.lastLocation?.lng !== undefined ? updates.lastLocation?.lng : currentItem.lastLocation?.lng,
+        type: updates.type !== undefined ? updates.type : currentItem.type,
+        custom_fields: { yard: updates.yard !== undefined ? updates.yard : currentItem.yard }
       };
       
       await api.put(`/api/inventory/${id}`, payload);
@@ -98,6 +107,15 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     }
   },
 
+  deleteItems: async (ids) => {
+    try {
+      await Promise.all(ids.map(id => api.delete(`/api/inventory/${id}`)));
+      await get().fetchInventory();
+    } catch (error) {
+      console.error('Failed to delete items:', error);
+    }
+  },
+
   importCSV: async (parsedData) => {
     try {
       const payloadItems = parsedData
@@ -106,7 +124,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
           sku_name: row.skuName.trim(),
           description: row.description?.trim(),
           qty: row.qty,
-          type: row.type
+          type: row.type,
+          custom_fields: { yard: row.yard || '' }
         }));
 
       if (payloadItems.length > 0) {

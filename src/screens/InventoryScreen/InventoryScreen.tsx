@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Key, Briefcase, Wallet, ChevronRight, ClipboardList, Plus, FileUp, Package, MapPin, Radar } from 'lucide-react-native';
+import { Key, Briefcase, Wallet, ChevronRight, ClipboardList, Plus, FileUp, Package, MapPin, Radar, Search, X as XIcon, Trash2, CheckSquare, Check } from 'lucide-react-native';
 import { useThemeColors } from '../../theme/useThemeColors';
 import { useInventoryStore } from '../../entities/inventory/model/useInventoryStore';
 
@@ -9,9 +9,13 @@ export const InventoryScreen = ({ navigation }: any) => {
   const colors = useThemeColors();
   const styles = getStyles(colors);
   const [activeFilter, setActiveFilter] = useState('All Items');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   
   const items = useInventoryStore(state => state.items);
   const fetchInventory = useInventoryStore(state => state.fetchInventory);
+  const deleteItem = useInventoryStore(state => state.deleteItem);
   const [refreshing, setRefreshing] = useState(false);
   const filters = ['All Items', 'Tracked', 'Untracked'];
 
@@ -22,10 +26,30 @@ export const InventoryScreen = ({ navigation }: any) => {
   }, [fetchInventory]);
 
   const filteredItems = items.filter(item => {
-    if (activeFilter === 'Tracked') return !!item.linkedTrackerId;
-    if (activeFilter === 'Untracked') return !item.linkedTrackerId;
+    if (activeFilter === 'Tracked' && !item.linkedTrackerId) return false;
+    if (activeFilter === 'Untracked' && !!item.linkedTrackerId) return false;
+    
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const skuMatch = item.skuName?.toLowerCase().includes(q);
+      const descMatch = item.description?.toLowerCase().includes(q);
+      const yardMatch = item.yard?.toLowerCase().includes(q);
+      if (!skuMatch && !descMatch && !yardMatch) return false;
+    }
+    
     return true;
   });
+
+  const toggleSelection = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+      if (newSelected.size === 0) setSelectionMode(false);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -53,6 +77,22 @@ export const InventoryScreen = ({ navigation }: any) => {
             </TouchableOpacity>
           ))}
         </ScrollView>
+
+        <View style={styles.searchContainer}>
+          <Search color={colors.mutedForeground} size={20} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search items..."
+            placeholderTextColor={colors.mutedForeground}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <XIcon color={colors.mutedForeground} size={20} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <ScrollView 
@@ -70,9 +110,27 @@ export const InventoryScreen = ({ navigation }: any) => {
               <TouchableOpacity 
                 key={item.id} 
                 style={styles.itemCard}
-                onPress={() => navigation.navigate('ItemForm', { itemId: item.id })}
+                onPress={() => {
+                  if (selectionMode) {
+                    toggleSelection(item.id);
+                  } else {
+                    navigation.navigate('ItemForm', { itemId: item.id });
+                  }
+                }}
+                onLongPress={() => {
+                  if (!selectionMode) {
+                    setSelectionMode(true);
+                    setSelectedIds(new Set([item.id]));
+                  }
+                }}
+                delayLongPress={300}
               >
                 <View style={styles.itemLeft}>
+                  {selectionMode && (
+                    <View style={[styles.checkbox, selectedIds.has(item.id) && styles.checkboxSelected]}>
+                      {selectedIds.has(item.id) && <Check color={colors.primaryForeground || '#FFF'} size={16} />}
+                    </View>
+                  )}
                   <View style={[
                     styles.iconContainer,
                     isTracked ? styles.iconContainerTracked : styles.iconContainerNormal
@@ -126,12 +184,50 @@ export const InventoryScreen = ({ navigation }: any) => {
       </ScrollView>
 
       {/* Floating Action Button */}
-      <TouchableOpacity 
-        style={styles.fab}
-        onPress={() => navigation.navigate('ItemForm')}
-      >
-        <Plus color="#FFF" size={28} />
-      </TouchableOpacity>
+      {!selectionMode && (
+        <TouchableOpacity 
+          style={styles.fab}
+          onPress={() => navigation.navigate('ItemForm')}
+        >
+          <Plus color="#FFF" size={28} />
+        </TouchableOpacity>
+      )}
+
+      {/* Floating Selection Bar */}
+      {selectionMode && (
+        <View style={styles.selectionBar}>
+          <Text style={styles.selectionCount}>{selectedIds.size} selected</Text>
+          <View style={styles.selectionActions}>
+            <TouchableOpacity onPress={() => {
+              const all = new Set(filteredItems.map(i => i.id));
+              setSelectedIds(all);
+            }}>
+              <Text style={styles.selectAllText}>Select All</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity onPress={() => {
+              Alert.alert('Delete Items', `Are you sure you want to delete ${selectedIds.size} items?`, [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: () => {
+                  selectedIds.forEach(id => deleteItem(id));
+                  setSelectionMode(false);
+                  setSelectedIds(new Set());
+                }}
+              ]);
+            }} style={styles.deleteActionBtn}>
+              <Trash2 color={colors.destructive} size={18} />
+              <Text style={styles.deleteActionText}>Delete</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity onPress={() => {
+              setSelectionMode(false);
+              setSelectedIds(new Set());
+            }}>
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -140,6 +236,84 @@ const getStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  searchContainer: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    height: 44,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 24,
+    marginBottom: 12,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    color: colors.foreground,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: colors.mutedForeground,
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  selectionBar: {
+    position: 'absolute',
+    bottom: 90,
+    left: 24,
+    right: 24,
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: colors.border,
+    zIndex: 30,
+  },
+  selectionCount: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: colors.foreground,
+  },
+  selectionActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  selectAllText: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  cancelText: {
+    color: colors.mutedForeground,
+    fontWeight: '600',
+  },
+  deleteActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  deleteActionText: {
+    color: colors.destructive,
+    fontWeight: '600',
   },
   header: {
     backgroundColor: colors.card,

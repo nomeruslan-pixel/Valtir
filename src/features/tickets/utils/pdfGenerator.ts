@@ -15,18 +15,24 @@ export const generateAndSharePDF = async (ticket: PickTicket) => {
       </tr>
     `).join('');
 
-    // Pre-process photos into base64 to ensure they render in the PDF
-    const base64Photos = await Promise.all(
-      ticket.photos.map(async (photoUri) => {
-        try {
-          const base64 = await FileSystem.readAsStringAsync(photoUri, { encoding: FileSystem.EncodingType.Base64 });
-          return `data:image/jpeg;base64,${base64}`;
-        } catch (e) {
-          console.error("Failed to read photo:", photoUri, e);
-          return photoUri; // Fallback to original uri
-        }
-      })
-    );
+    let base64Photos: string[] = [];
+    try {
+      const results = await Promise.all(
+        ticket.photos.map(async (photoUri) => {
+          try {
+            const base64 = await FileSystem.readAsStringAsync(photoUri, { encoding: FileSystem.EncodingType.Base64 });
+            return `data:image/jpeg;base64,${base64}`;
+          } catch (e) {
+            console.error(`Failed to read photo at ${photoUri}:`, e);
+            return null; // Skip individual failed photos
+          }
+        })
+      );
+      base64Photos = results.filter((p): p is string => p !== null);
+    } catch (e) {
+      console.error('Failed in global photo processing:', e);
+      base64Photos = [];
+    }
 
     const photosHtml = base64Photos.map(photo => `
       <img src="${photo}" style="width: 45%; margin: 2%; border-radius: 8px; object-fit: cover;" />
@@ -65,7 +71,7 @@ export const generateAndSharePDF = async (ticket: PickTicket) => {
             </tbody>
           </table>
 
-          ${ticket.photos.length > 0 ? `
+          ${base64Photos.length > 0 ? `
             <h2>Truck Photos</h2>
             <div class="photos-container">
               ${photosHtml}
@@ -77,30 +83,36 @@ export const generateAndSharePDF = async (ticket: PickTicket) => {
 
     const { uri } = await Print.printToFileAsync({ html: htmlContent });
     
-    // Rename the file to include the ticket number securely
     const safeExternalId = ticket.externalId.replace(/[^a-zA-Z0-9-_]/g, '_');
-    const newUri = FileSystem.documentDirectory + `PickTicket_${safeExternalId}.pdf`;
+    const baseDir = FileSystem.documentDirectory || FileSystem.cacheDirectory;
+    if (!baseDir) {
+      throw new Error("No file system directory available");
+    }
+    
+    const newUri = baseDir + `PickTicket_${safeExternalId}.pdf`;
+    let finalUri = uri;
     
     try {
       const fileInfo = await FileSystem.getInfoAsync(newUri);
       if (fileInfo.exists) {
         await FileSystem.deleteAsync(newUri);
       }
+      await FileSystem.moveAsync({
+        from: uri,
+        to: newUri
+      });
+      finalUri = newUri;
     } catch (e) {
-      console.log('Error deleting old pdf:', e);
+      console.error('Error moving pdf to document directory:', e);
+      finalUri = uri; // fallback to original uri
     }
 
-    await FileSystem.moveAsync({
-      from: uri,
-      to: newUri
-    });
-    
     const isAvailable = await Sharing.isAvailableAsync();
     if (isAvailable) {
-      await Sharing.shareAsync(newUri, { UTI: '.pdf', mimeType: 'application/pdf' });
+      await Sharing.shareAsync(finalUri, { UTI: '.pdf', mimeType: 'application/pdf' });
     }
   } catch (error) {
-    console.error('Error generating PDF', error);
+    console.error('Error generating PDF:', error);
     throw error;
   }
 };

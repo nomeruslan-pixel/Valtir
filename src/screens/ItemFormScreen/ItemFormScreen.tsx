@@ -20,6 +20,8 @@ export const ItemFormScreen = ({ navigation, route }: any) => {
   const [skuName, setSkuName] = useState(existingItem?.skuName || '');
   const [description, setDescription] = useState(existingItem?.description || '');
   const [qty, setQty] = useState(existingItem?.qty?.toString() || '1');
+  const [type, setType] = useState<string | null>(existingItem?.type || null);
+  const [yard, setYard] = useState(existingItem?.yard || '');
   const [linkedTrackerId, setLinkedTrackerId] = useState<string | null>(existingItem?.linkedTrackerId || trackerId || null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -57,6 +59,8 @@ export const ItemFormScreen = ({ navigation, route }: any) => {
       qty: parseInt(qty, 10) || 0,
       linkedTrackerId,
       lastLocation: coords,
+      type,
+      yard: yard.trim()
     };
 
     if (existingItem) {
@@ -112,6 +116,32 @@ export const ItemFormScreen = ({ navigation, route }: any) => {
             onChangeText={setQty}
             keyboardType="number-pad"
             placeholder="0"
+            placeholderTextColor={colors.mutedForeground}
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Type</Text>
+          <View style={styles.typeRow}>
+            {['Fabricated', 'Purchased', 'Raw'].map((t) => (
+              <TouchableOpacity
+                key={t}
+                style={[styles.typeButton, type === t && styles.typeButtonActive]}
+                onPress={() => setType(type === t ? null : t)}
+              >
+                <Text style={[styles.typeButtonText, type === t && styles.typeButtonTextActive]}>{t}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Yard</Text>
+          <TextInput
+            style={styles.input}
+            value={yard}
+            onChangeText={setYard}
+            placeholder="e.g. Yard A"
             placeholderTextColor={colors.mutedForeground}
           />
         </View>
@@ -227,6 +257,30 @@ const getStyles = (colors: any) => StyleSheet.create({
     padding: 16,
     fontSize: 16,
     color: colors.cardForeground,
+  },
+  typeRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  typeButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: colors.muted,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  typeButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  typeButtonText: {
+    color: colors.mutedForeground,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  typeButtonTextActive: {
+    color: '#fff',
   },
   trackerBox: {
     backgroundColor: colors.card,
