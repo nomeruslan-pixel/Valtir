@@ -15,28 +15,9 @@ export const generateAndSharePDF = async (ticket: PickTicket) => {
       </tr>
     `).join('');
 
-    let base64Photos: string[] = [];
-    try {
-      const results = await Promise.all(
-        ticket.photos.map(async (photoUri) => {
-          try {
-            const base64 = await FileSystem.readAsStringAsync(photoUri, { encoding: FileSystem.EncodingType.Base64 });
-            return `data:image/jpeg;base64,${base64}`;
-          } catch (e) {
-            console.error(`Failed to read photo at ${photoUri}:`, e);
-            return null; // Skip individual failed photos
-          }
-        })
-      );
-      base64Photos = results.filter((p): p is string => p !== null);
-    } catch (e) {
-      console.error('Failed in global photo processing:', e);
-      base64Photos = [];
-    }
-
-    const photosHtml = base64Photos.map(photo => `
+    const photosHtml = ticket.photos && ticket.photos.length > 0 ? ticket.photos.map(photo => `
       <img src="${photo}" style="width: 45%; margin: 2%; border-radius: 8px; object-fit: cover;" />
-    `).join('');
+    `).join('') : '';
 
     const htmlContent = `
       <html>
@@ -71,7 +52,7 @@ export const generateAndSharePDF = async (ticket: PickTicket) => {
             </tbody>
           </table>
 
-          ${base64Photos.length > 0 ? `
+          ${ticket.photos && ticket.photos.length > 0 ? `
             <h2>Truck Photos</h2>
             <div class="photos-container">
               ${photosHtml}

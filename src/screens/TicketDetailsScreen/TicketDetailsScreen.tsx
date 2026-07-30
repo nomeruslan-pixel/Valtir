@@ -109,8 +109,9 @@ export const TicketDetailsScreen = ({ route, navigation }: any) => {
   const handleExportPDF = async () => {
     try {
       await generateAndSharePDF(ticket);
-    } catch (e) {
-      Alert.alert('Error', 'Failed to generate PDF.');
+    } catch (e: any) {
+      const errMsg = e?.message || String(e);
+      Alert.alert('Error', `Failed to generate PDF. Details: ${errMsg}`);
     }
   };
 
