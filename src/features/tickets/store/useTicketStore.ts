@@ -83,7 +83,7 @@ export const useTicketStore = create<TicketStore>((set, get) => ({
 
     const grouped = csvData.reduce((acc: any, row: any) => {
       // Robust matching for Load Number
-      const loadNumber = getVal(row, ['Load Number']);
+      const loadNumber = getVal(row, ['Load Number', 'Ticket Number', 'Ticket', 'Order', 'Load']);
       const tId = loadNumber ? loadNumber.toString().trim() : 'UNKNOWN';
 
       if (!tId || tId === 'UNKNOWN') return acc;
@@ -97,8 +97,8 @@ export const useTicketStore = create<TicketStore>((set, get) => ({
       const rows = grouped[ticketNum];
       const items = rows.map((r: any) => {
         // Robust matching
-        const itemValue = getVal(r, ['Item']);
-        const descValue = getVal(r, ['Description']) || '';
+        const itemValue = getVal(r, ['Item', 'Part Number', 'SKU', 'Part', 'Name']);
+        const descValue = getVal(r, ['Description', 'Desc']) || '';
         const qtyValue = getVal(r, ['Qty', 'Quantity']) || '1';
         const typeValue = getVal(r, ['Type']) || null;
         
