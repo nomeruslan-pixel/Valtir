@@ -66,26 +66,23 @@ export const generateAndSharePDF = async (ticket: PickTicket) => {
     
     const safeExternalId = ticket.externalId.replace(/[^a-zA-Z0-9-_]/g, '_');
     const baseDir = FileSystem.documentDirectory || FileSystem.cacheDirectory;
-    if (!baseDir) {
-      throw new Error("No file system directory available");
-    }
     
-    const newUri = baseDir + `PickTicket_${safeExternalId}.pdf`;
     let finalUri = uri;
-    
-    try {
-      const fileInfo = await FileSystem.getInfoAsync(newUri);
-      if (fileInfo.exists) {
-        await FileSystem.deleteAsync(newUri);
+    if (baseDir) {
+      const newUri = baseDir + `PickTicket_${safeExternalId}.pdf`;
+      try {
+        const fileInfo = await FileSystem.getInfoAsync(newUri);
+        if (fileInfo.exists) {
+          await FileSystem.deleteAsync(newUri);
+        }
+        await FileSystem.moveAsync({
+          from: uri,
+          to: newUri
+        });
+        finalUri = newUri;
+      } catch (e) {
+        console.error('Error moving pdf to document directory:', e);
       }
-      await FileSystem.moveAsync({
-        from: uri,
-        to: newUri
-      });
-      finalUri = newUri;
-    } catch (e) {
-      console.error('Error moving pdf to document directory:', e);
-      finalUri = uri; // fallback to original uri
     }
 
     const isAvailable = await Sharing.isAvailableAsync();
