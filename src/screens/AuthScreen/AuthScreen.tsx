@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../../api/client';
 import { useAuthStore } from '../../features/auth/store/useAuthStore';
@@ -55,63 +55,73 @@ export const AuthScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.content}>
-        <Text style={[styles.title, { color: colors.foreground }]}>
-          {isLogin ? 'Welcome Back' : 'Create Account'}
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-          {isLogin ? 'Sign in to access your inventory' : 'Set up your company workspace'}
-        </Text>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.content} 
+          keyboardShouldPersistTaps="handled"
+          bounces={false}
+        >
+          <Text style={[styles.title, { color: colors.foreground }]}>
+            {isLogin ? 'Welcome Back' : 'Create Account'}
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
+            {isLogin ? 'Sign in to access your inventory' : 'Set up your company workspace'}
+          </Text>
 
-        {!isLogin && (
+          {!isLogin && (
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.card, color: colors.foreground, borderColor: colors.border }]}
+              placeholder="Company Name"
+              placeholderTextColor={colors.mutedForeground}
+              value={companyName}
+              onChangeText={setCompanyName}
+            />
+          )}
+          
           <TextInput
             style={[styles.input, { backgroundColor: colors.card, color: colors.foreground, borderColor: colors.border }]}
-            placeholder="Company Name"
+            placeholder="Email"
             placeholderTextColor={colors.mutedForeground}
-            value={companyName}
-            onChangeText={setCompanyName}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
           />
-        )}
-        
-        <TextInput
-          style={[styles.input, { backgroundColor: colors.card, color: colors.foreground, borderColor: colors.border }]}
-          placeholder="Email"
-          placeholderTextColor={colors.mutedForeground}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        
-        <TextInput
-          style={[styles.input, { backgroundColor: colors.card, color: colors.foreground, borderColor: colors.border }]}
-          placeholder="Password"
-          placeholderTextColor={colors.mutedForeground}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+          
+          <TextInput
+            style={[styles.input, { backgroundColor: colors.card, color: colors.foreground, borderColor: colors.border }]}
+            placeholder="Password"
+            placeholderTextColor={colors.mutedForeground}
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
 
-        <TouchableOpacity 
-          style={[styles.button, { backgroundColor: colors.primary }]}
-          onPress={handleSubmit}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color={colors.primaryForeground} />
-          ) : (
-            <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>
-              {isLogin ? 'Sign In' : 'Register'}
+          <TouchableOpacity 
+            style={[styles.button, { backgroundColor: colors.primary }]}
+            onPress={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color={colors.primaryForeground} />
+            ) : (
+              <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>
+                {isLogin ? 'Sign In' : 'Register'}
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => setIsLogin(!isLogin)} style={styles.switchButton}>
+            <Text style={[styles.switchText, { color: colors.primary }]}>
+              {isLogin ? "Don't have an account? Register" : 'Already have an account? Sign in'}
             </Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => setIsLogin(!isLogin)} style={styles.switchButton}>
-          <Text style={[styles.switchText, { color: colors.primary }]}>
-            {isLogin ? "Don't have an account? Register" : 'Already have an account? Sign in'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -121,7 +131,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
     padding: 24,
     justifyContent: 'center',
   },

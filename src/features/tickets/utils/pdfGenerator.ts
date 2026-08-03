@@ -3,6 +3,21 @@ import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import { PickTicket } from '../store/useTicketStore';
 
+const photoToBase64 = async (uri: string): Promise<string | null> => {
+  try {
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    // Determine mime type from extension
+    const ext = uri.split('.').pop()?.toLowerCase() || 'jpeg';
+    const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+    return `data:${mime};base64,${base64}`;
+  } catch (e) {
+    console.error('Failed to read photo as base64:', e);
+    return null;
+  }
+};
+
 export const generateAndSharePDF = async (ticket: PickTicket) => {
   try {
     const itemsHtml = ticket.items.map(item => `
@@ -15,9 +30,21 @@ export const generateAndSharePDF = async (ticket: PickTicket) => {
       </tr>
     `).join('');
 
-    const photosHtml = ticket.photos && ticket.photos.length > 0 ? ticket.photos.map(photo => `
-      <img src="${photo}" style="width: 45%; margin: 2%; border-radius: 8px; object-fit: cover;" />
-    `).join('') : '';
+    // Convert photos to base64 data URIs for proper embedding
+    let photosHtml = '';
+    if (ticket.photos && ticket.photos.length > 0) {
+      const base64Photos = await Promise.all(
+        ticket.photos.map(photo => photoToBase64(photo))
+      );
+      photosHtml = base64Photos
+        .filter((b64): b64 is string => b64 !== null)
+        .map(b64 => `
+          <img src="${b64}" style="width: 45%; margin: 2%; border-radius: 8px; object-fit: cover;" />
+        `).join('');
+    }
+
+    // Use ticket-level status
+    const ticketStatus = ticket.status.toUpperCase().replace(/-/g, ' ');
 
     const htmlContent = `
       <html>
@@ -33,7 +60,7 @@ export const generateAndSharePDF = async (ticket: PickTicket) => {
         </head>
         <body>
           <h1>Pick Ticket #${ticket.externalId}</h1>
-          <p><strong>Status:</strong> ${ticket.status.toUpperCase()}</p>
+          <p><strong>Status:</strong> ${ticketStatus}</p>
           <p><strong>Date:</strong> ${new Date(ticket.createdAt).toLocaleString()}</p>
           
           <h2>Items List</h2>
@@ -52,7 +79,7 @@ export const generateAndSharePDF = async (ticket: PickTicket) => {
             </tbody>
           </table>
 
-          ${ticket.photos && ticket.photos.length > 0 ? `
+          ${photosHtml ? `
             <h2>Truck Photos</h2>
             <div class="photos-container">
               ${photosHtml}
@@ -87,7 +114,11 @@ export const generateAndSharePDF = async (ticket: PickTicket) => {
 
     const isAvailable = await Sharing.isAvailableAsync();
     if (isAvailable) {
-      await Sharing.shareAsync(finalUri, { UTI: '.pdf', mimeType: 'application/pdf' });
+      await Sharing.shareAsync(finalUri, { 
+        UTI: '.pdf', 
+        mimeType: 'application/pdf',
+        dialogTitle: `Pick Ticket ${ticket.externalId}`,
+      });
     }
   } catch (error) {
     console.error('Error generating PDF:', error);
