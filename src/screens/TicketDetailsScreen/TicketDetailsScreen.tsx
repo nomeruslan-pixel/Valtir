@@ -13,6 +13,7 @@ export const TicketDetailsScreen = ({ route, navigation }: any) => {
   const { items: inventoryItems, updateItem: updateInventoryItem } = useInventoryStore();
   const colors = useThemeColors();
   const styles = getStyles(colors);
+  const [isExporting, setIsExporting] = React.useState(false);
 
   const ticket = tickets.find(t => t.id === ticketId);
 
@@ -107,11 +108,16 @@ export const TicketDetailsScreen = ({ route, navigation }: any) => {
   };
 
   const handleExportPDF = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
     try {
       await generateAndSharePDF(ticket);
+      Alert.alert('Success', 'The PDF was successfully generated and shared!');
     } catch (e: any) {
       const errMsg = e?.message || String(e);
       Alert.alert('Error', `Failed to generate PDF. Details: ${errMsg}`);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -239,9 +245,15 @@ export const TicketDetailsScreen = ({ route, navigation }: any) => {
       </ScrollView>
 
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.primaryButton} onPress={handleExportPDF}>
+        <TouchableOpacity 
+          style={[styles.primaryButton, isExporting && { opacity: 0.7 }]} 
+          onPress={handleExportPDF}
+          disabled={isExporting}
+        >
           <FileText color={colors.primaryForeground} size={20} style={{ marginRight: 8 }} />
-          <Text style={styles.primaryButtonText}>Print / Export PDF</Text>
+          <Text style={styles.primaryButtonText}>
+            {isExporting ? 'Generating...' : 'Print / Export PDF'}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
