@@ -1,17 +1,23 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
+import * as ImageManipulator from 'expo-image-manipulator';
 import { PickTicket } from '../store/useTicketStore';
 
 const photoToBase64 = async (uri: string): Promise<string | null> => {
   try {
-    const base64 = await FileSystem.readAsStringAsync(uri, {
+    // Compress and resize the image to ensure the base64 string is small enough for WKWebView to render quickly
+    const manipResult = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: 800 } }],
+      { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG }
+    );
+    
+    const base64 = await FileSystem.readAsStringAsync(manipResult.uri, {
       encoding: FileSystem.EncodingType.Base64,
     });
-    // Determine mime type from extension
-    const ext = uri.split('.').pop()?.toLowerCase() || 'jpeg';
-    const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
-    return `data:${mime};base64,${base64}`;
+    
+    return `data:image/jpeg;base64,${base64}`;
   } catch (e) {
     console.error('Failed to read photo as base64:', e);
     return null;
