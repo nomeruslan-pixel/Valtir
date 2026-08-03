@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AuthState {
   token: string | null;
@@ -15,19 +14,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   setToken: async (token: string) => {
-    await AsyncStorage.setItem('auth_token', token);
     set({ token, isAuthenticated: true });
   },
   logout: async () => {
-    await AsyncStorage.removeItem('auth_token');
     set({ token: null, isAuthenticated: false, user: null });
   },
   checkAuth: async () => {
-    const token = await AsyncStorage.getItem('auth_token');
-    if (token) {
-      set({ token, isAuthenticated: true });
-    } else {
-      set({ token: null, isAuthenticated: false });
-    }
+    // Session is no longer persisted, so checkAuth does nothing
+    // User will always need to log in on app restart
+    set((state) => ({ 
+      token: state.token, 
+      isAuthenticated: !!state.token 
+    }));
   }
 }));
