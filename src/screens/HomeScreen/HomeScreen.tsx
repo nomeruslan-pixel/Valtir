@@ -27,7 +27,7 @@ export const HomeScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Valtir Hub</Text>
+          <Text style={styles.headerTitle}>Inventory Hub</Text>
           <Text style={styles.headerSubtitle}>Welcome back</Text>
         </View>
         <TouchableOpacity 
